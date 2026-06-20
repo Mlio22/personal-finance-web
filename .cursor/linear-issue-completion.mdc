@@ -1,0 +1,77 @@
+---
+description: Post-completion workflow when finishing a Linear issue assigned to a cloud agent
+alwaysApply: true
+---
+
+# Linear issue post-completion workflow
+
+When you finish work on a Linear-assigned issue, complete these post-tasks before ending the session.
+
+## 1. Notify Linear and Slack
+
+Post the same completion summary to both channels.
+
+**Linear:** Add a comment on the issue.
+
+**Slack:** Send to the project's configured channel (or ask the user which channel if unknown).
+
+### Message template
+
+```
+✅ **{ISSUE_ID} — {ISSUE_TITLE}** is ready for review.
+
+**Summary:** {1–2 sentence summary of what changed}
+
+**PR:** {PR_URL}
+
+**Recommended follow-up:** {next issue/idea, or "None — no immediate follow-up identified."}
+```
+
+Keep the recommended follow-up concrete when there is one (e.g. a related bug, missing test, or natural next feature). Say "None" when nothing stands out.
+
+## 2. Update issue details
+
+Update the Linear issue description with:
+
+### Acceptance criteria (mark complete)
+
+```markdown
+## Acceptance criteria
+
+- [x] {criterion 1}
+- [x] {criterion 2}
+```
+
+### Completion checklist
+
+```markdown
+## Agent completion checklist
+
+- [x] Implementation complete
+- [x] Tests run (note pass/fail)
+- [x] PR opened
+- [x] Linear comment posted
+- [x] Slack notification sent
+```
+
+Add or adjust criteria to match what the issue actually required.
+
+## 3. Update issue status
+
+| When                                    | Status        |
+| --------------------------------------- | ------------- |
+| Work finished, PR opened                | **In Review** |
+| User merges PR or approves after review | **Done**      |
+
+Do not move to **Done** until the user has reviewed the PR. After opening the PR, set status to **In Review** only.
+
+If a follow-up automation watches PR merge (e.g. Cursor Automation with GitHub "PR merged" trigger), that automation may move the issue to **Done** when the PR lands on `main`.
+
+## 4. PR requirements
+
+Every issue that changes code must have a PR before post-tasks are considered complete:
+
+1. Commit and push to a `cursor/<descriptive-name>-6dc1` branch
+2. Open a draft PR against `main`
+3. Include issue ID (`IIK-xxx`) in the PR title or description
+4. Summarize changes and testing in the PR body
