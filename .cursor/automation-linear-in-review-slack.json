@@ -1,0 +1,6 @@
+{
+  "description": "Slack notification prompt when a Linear issue moves to In Review or Done",
+  "channel": "#p-personal-finance-management-w-cursor",
+  "instructions": "Post a completion summary to the project Slack channel when a Linear issue status changes to In Review or Done. Use the trigger context for issue ID, title, status, assignee, description, and URL. If a PR exists for the issue, include it; otherwise omit the PR line. Keep the message concise and actionable.",
+  "messageTemplate": "✅ **{ISSUE_ID} — {ISSUE_TITLE}** is {STATUS}.\n\n**Summary:** {1–2 sentence summary of what was completed}\n\n**Linear:** {ISSUE_URL}\n\n**PR:** {PR_URL or omit if none}\n\n**Recommended follow-up:** {next issue/idea, or \"None — no immediate follow-up identified.\"}"
+}
