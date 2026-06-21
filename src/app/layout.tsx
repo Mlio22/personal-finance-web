@@ -1,6 +1,5 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { AppShell } from "@/components/layout/app-shell";
 import { QueryProvider } from "@/providers/query-provider";
 import "./globals.css";
 
@@ -15,8 +14,15 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Personal Finance",
-  description: "Manage your personal finances",
+  title: "MoneyIQ",
+  description: "Personal finance management",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#121212",
 };
 
 export default function RootLayout({
@@ -27,12 +33,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} dark h-full antialiased`}
     >
-      <body className="min-h-full">
-        <QueryProvider>
-          <AppShell>{children}</AppShell>
-        </QueryProvider>
+      <body className="min-h-full bg-background text-foreground">
+        <QueryProvider>{children}</QueryProvider>
       </body>
     </html>
   );
