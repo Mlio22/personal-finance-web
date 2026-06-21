@@ -5,6 +5,7 @@ export default function AccountsPage() {
     <TabPlaceholder
       title="Accounts"
       description="View and manage your wallets, bank accounts, and cash holdings."
+      showPeriod={false}
     />
   );
 }
