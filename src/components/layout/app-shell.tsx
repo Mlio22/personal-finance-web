@@ -1,12 +1,15 @@
+import { AccountFilterProvider } from "@/features/accounts/context/account-filter-provider";
 import { AppHeader } from "@/components/layout/app-header";
+import { BottomNav } from "@/components/layout/bottom-nav";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-full flex-col">
-      <AppHeader />
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
-        {children}
-      </main>
-    </div>
+    <AccountFilterProvider>
+      <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col bg-background">
+        <AppHeader />
+        <main className="flex-1 overflow-y-auto px-4 py-4">{children}</main>
+        <BottomNav />
+      </div>
+    </AccountFilterProvider>
   );
 }
