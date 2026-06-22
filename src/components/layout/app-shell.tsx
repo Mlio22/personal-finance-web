@@ -1,5 +1,8 @@
 import { AccountFilterProvider } from "@/features/accounts/context/account-filter-provider";
-import { PeriodProvider } from "@/features/period/context/period-provider";
+import {
+  LockedCalendarMonthProvider,
+  PeriodProvider,
+} from "@/features/period/context/period-provider";
 import { AppHeader } from "@/components/layout/app-header";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { InstallPrompt } from "@/components/pwa/install-prompt";
@@ -9,6 +12,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <AccountFilterProvider>
       <PeriodProvider>
+        <LockedCalendarMonthProvider>
         <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col bg-background">
           <OfflineIndicator />
           <InstallPrompt />
@@ -16,6 +20,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <main className="flex-1 overflow-y-auto px-4 py-4">{children}</main>
           <BottomNav />
         </div>
+        </LockedCalendarMonthProvider>
       </PeriodProvider>
     </AccountFilterProvider>
   );
