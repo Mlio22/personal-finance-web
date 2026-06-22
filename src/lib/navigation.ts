@@ -1,12 +1,13 @@
 import {
   BarChart3,
   Gauge,
+  Landmark,
+  LayoutDashboard,
   LayoutList,
   PieChart,
   Plus,
   Search,
   Settings,
-  SlidersHorizontal,
   Wallet,
   type LucideIcon,
 } from "lucide-react";
@@ -41,8 +42,8 @@ export const MAIN_TABS: MainTab[] = [
     href: "/categories",
     label: "Categories",
     icon: PieChart,
-    actionIcon: Plus,
-    actionLabel: "Add category",
+    actionIcon: Landmark,
+    actionLabel: "Manage categories",
   },
   {
     id: "transactions",
@@ -57,8 +58,8 @@ export const MAIN_TABS: MainTab[] = [
     href: "/budget",
     label: "Budget",
     icon: Gauge,
-    actionIcon: SlidersHorizontal,
-    actionLabel: "Budget settings",
+    actionIcon: LayoutDashboard,
+    actionLabel: "Budget dashboard",
   },
   {
     id: "overview",
