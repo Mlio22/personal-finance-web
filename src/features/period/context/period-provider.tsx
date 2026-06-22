@@ -146,7 +146,37 @@ export function usePeriod() {
   return context;
 }
 
+const LockedCalendarMonthContext = createContext<PeriodContextValue | null>(
+  null,
+);
+
+export function LockedCalendarMonthProvider({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  const value = useLockedCalendarMonthPeriodState();
+
+  return (
+    <LockedCalendarMonthContext.Provider value={value}>
+      {children}
+    </LockedCalendarMonthContext.Provider>
+  );
+}
+
 export function useLockedCalendarMonthPeriod(): PeriodContextValue {
+  const context = useContext(LockedCalendarMonthContext);
+
+  if (!context) {
+    throw new Error(
+      "useLockedCalendarMonthPeriod must be used within LockedCalendarMonthProvider",
+    );
+  }
+
+  return context;
+}
+
+function useLockedCalendarMonthPeriodState(): PeriodContextValue {
   const [anchorMonth, setAnchorMonth] = useState(() => startOfCurrentMonth());
 
   const lockedRange = useMemo(

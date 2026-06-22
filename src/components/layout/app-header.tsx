@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AccountFilterSheet } from "@/features/accounts/components/account-filter-sheet";
 import { PeriodSelector } from "@/features/period/components/period-selector";
@@ -31,15 +32,25 @@ export function AppHeader() {
         <AccountFilterSheet />
 
         {ActionIcon ? (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="shrink-0 rounded-full"
-            aria-label={currentTab.actionLabel}
-            type="button"
-          >
-            <ActionIcon className="size-5" aria-hidden="true" />
-          </Button>
+          currentTab.id === "budget" ? (
+            <Link
+              href="/overview"
+              className="inline-flex size-8 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-muted/50"
+              aria-label={currentTab.actionLabel}
+            >
+              <ActionIcon className="size-5" aria-hidden="true" />
+            </Link>
+          ) : (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="shrink-0 rounded-full"
+              aria-label={currentTab.actionLabel}
+              type="button"
+            >
+              <ActionIcon className="size-5" aria-hidden="true" />
+            </Button>
+          )
         ) : (
           <span className="size-9 shrink-0" aria-hidden="true" />
         )}
