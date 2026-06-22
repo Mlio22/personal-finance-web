@@ -14,10 +14,12 @@ import {
   formatCalendarMonthPill,
   formatPeriodRangeLabel,
   formatPeriodRangePill,
+  getCalendarMonthBadge,
   getCalendarMonthRange,
   getDefaultCustomRange,
   getPeriodBadge,
   getPeriodRange,
+  navigateCalendarMonth,
   navigatePeriodAnchor,
 } from "@/features/period/lib/period-utils";
 import type { DateRange, PeriodPreset, PeriodRange } from "@/features/period/types";
@@ -145,27 +147,57 @@ export function usePeriod() {
 }
 
 export function useLockedCalendarMonthPeriod(): PeriodContextValue {
-  const period = usePeriod();
-  const today = useMemo(() => new Date(), []);
-  const lockedRange = useMemo(() => getCalendarMonthRange(today), [today]);
-  const lockedLabel = useMemo(() => formatCalendarMonthLabel(today), [today]);
-  const lockedPillLabel = useMemo(() => formatCalendarMonthPill(today), [today]);
+  const [anchorMonth, setAnchorMonth] = useState(() => startOfCurrentMonth());
+
+  const lockedRange = useMemo(
+    () => getCalendarMonthRange(anchorMonth),
+    [anchorMonth],
+  );
+  const lockedLabel = useMemo(
+    () => formatCalendarMonthLabel(anchorMonth),
+    [anchorMonth],
+  );
+  const lockedPillLabel = useMemo(
+    () => formatCalendarMonthPill(anchorMonth),
+    [anchorMonth],
+  );
+  const badge = useMemo(
+    () => getCalendarMonthBadge(anchorMonth),
+    [anchorMonth],
+  );
+
+  const navigatePrevious = useCallback(() => {
+    setAnchorMonth((current) => navigateCalendarMonth(current, "previous"));
+  }, []);
+
+  const navigateNext = useCallback(() => {
+    setAnchorMonth((current) => navigateCalendarMonth(current, "next"));
+  }, []);
 
   return useMemo(
     () => ({
-      ...period,
       preset: "month",
+      anchorDate: anchorMonth,
+      customRange: undefined,
       range: lockedRange,
-      badge: "30",
+      badge,
       displayLabel: lockedLabel,
       pillLabel: lockedPillLabel,
-      canNavigate: false,
-      navigatePrevious: () => undefined,
-      navigateNext: () => undefined,
+      canNavigate: true,
+      navigatePrevious,
+      navigateNext,
       setPreset: () => undefined,
       setCustomRange: () => undefined,
     }),
-    [period, lockedRange, lockedLabel, lockedPillLabel],
+    [
+      anchorMonth,
+      lockedRange,
+      badge,
+      lockedLabel,
+      lockedPillLabel,
+      navigatePrevious,
+      navigateNext,
+    ],
   );
 }
 
@@ -173,6 +205,11 @@ function startOfToday(): Date {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   return today;
+}
+
+function startOfCurrentMonth(): Date {
+  const today = startOfToday();
+  return new Date(today.getFullYear(), today.getMonth(), 1);
 }
 
 function startOfDay(date: Date): Date {

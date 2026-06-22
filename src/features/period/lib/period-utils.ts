@@ -286,3 +286,17 @@ export function formatCalendarMonthPill(referenceDate = new Date()): string {
 
   return `${range.start.getDate()} ${MONTH_NAMES_SHORT[range.start.getMonth()].toUpperCase()} – ${range.end.getDate()} ${MONTH_NAMES_SHORT[range.end.getMonth()].toUpperCase()} ${range.end.getFullYear()}`;
 }
+
+export function getCalendarMonthBadge(referenceDate = new Date()): string {
+  return String(endOfMonth(referenceDate).getDate());
+}
+
+export function navigateCalendarMonth(
+  referenceDate: Date,
+  direction: "previous" | "next",
+): Date {
+  const delta = direction === "next" ? 1 : -1;
+  return startOfMonth(
+    new Date(referenceDate.getFullYear(), referenceDate.getMonth() + delta, 1),
+  );
+}
