@@ -30,12 +30,16 @@ function CategoriesSkeleton() {
   );
 }
 
-export function CategoriesScreen() {
+export function CategoriesScreen({
+  initialCategoryId = null,
+}: {
+  initialCategoryId?: string | null;
+}) {
   const { data: summaryData, isLoading: isSummaryLoading } =
     useCategoriesSummary();
   const { data: overviewData, isLoading: isOverviewLoading } = useOverview();
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
-    null,
+    initialCategoryId,
   );
 
   const isLoading = isSummaryLoading || isOverviewLoading;
@@ -74,8 +78,8 @@ export function CategoriesScreen() {
         <div className="col-span-2 row-span-4 row-start-2 flex items-center justify-center">
           <ExpenseDonutChart
             categories={categories}
-            totalExpenses={overviewData?.totalExpenses ?? 0}
-            totalIncome={overviewData?.totalIncome ?? 0}
+            totalExpenses={overviewData?.expenses ?? 0}
+            totalIncome={overviewData?.income ?? 0}
             selectedCategoryId={selectedCategoryId}
             onSegmentSelect={setSelectedCategoryId}
           />

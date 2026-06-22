@@ -1,4 +1,4 @@
-import { MOCK_OVERVIEW } from "@/features/categories/data/mock-categories-data";
+import { MOCK_OVERVIEW } from "@/features/categories/data/mock-overview-data";
 import type { OverviewResponse } from "@/features/categories/types";
 import { apiClient } from "@/lib/api-client";
 import { buildPeriodQueryString } from "@/lib/period-query-params";

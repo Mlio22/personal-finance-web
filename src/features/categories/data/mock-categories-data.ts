@@ -1,7 +1,7 @@
-import type {
-  CategoriesSummaryResponse,
-  OverviewResponse,
-} from "@/features/categories/types";
+import type { CategoriesSummaryResponse } from "@/features/categories/types";
+import { MOCK_OVERVIEW } from "@/features/categories/data/mock-overview-data";
+
+export { MOCK_OVERVIEW };
 
 export const MOCK_CATEGORIES_SUMMARY: CategoriesSummaryResponse = {
   categories: [
@@ -96,8 +96,3 @@ export const MOCK_CATEGORIES_SUMMARY: CategoriesSummaryResponse = {
   ],
 };
 
-export const MOCK_OVERVIEW: OverviewResponse = {
-  totalBalance: 1_952_871,
-  totalIncome: 9_135_189,
-  totalExpenses: 8_396_715,
-};
