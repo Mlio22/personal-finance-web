@@ -13,6 +13,7 @@ import {
   getTotalBalance,
   MOCK_ACCOUNTS,
 } from "@/features/accounts/data/mock-accounts";
+import { useAccounts } from "@/features/accounts/hooks/use-accounts";
 import type { Account } from "@/features/accounts/types";
 
 interface AccountFilterContextValue {
@@ -32,9 +33,10 @@ export function AccountFilterProvider({ children }: { children: ReactNode }) {
   const [selectedAccountId, setSelectedAccountId] = useState(
     ALL_ACCOUNTS_FILTER_ID,
   );
+  const { data } = useAccounts();
 
-  const accounts = MOCK_ACCOUNTS;
-  const totalBalance = useMemo(() => getTotalBalance(accounts), [accounts]);
+  const accounts = data?.accounts ?? MOCK_ACCOUNTS;
+  const totalBalance = data?.totals.accounts ?? getTotalBalance(accounts);
 
   const selectedAccount = useMemo(() => {
     if (selectedAccountId === ALL_ACCOUNTS_FILTER_ID) {
