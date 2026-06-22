@@ -1,7 +1,24 @@
+import { spawnSync } from "node:child_process";
+import { randomUUID } from "node:crypto";
+import withSerwistInit from "@serwist/next";
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
-  /* config options here */
-};
+const revision =
+  spawnSync("git", ["rev-parse", "HEAD"], { encoding: "utf-8" }).stdout.trim() ||
+  randomUUID();
 
-export default nextConfig;
+const withSerwist = withSerwistInit({
+  swSrc: "src/app/sw.ts",
+  swDest: "public/sw.js",
+  additionalPrecacheEntries: [{ url: "/~offline", revision }],
+  disable: process.env.NODE_ENV === "development",
+  globPublicPatterns: [
+    "favicon.png",
+    "apple-touch-icon.png",
+    "icons/**/*.{png,svg}",
+  ],
+});
+
+const nextConfig: NextConfig = {};
+
+export default withSerwist(nextConfig);
