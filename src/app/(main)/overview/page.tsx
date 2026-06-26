@@ -1,10 +1,5 @@
-import { TabPlaceholder } from "@/components/layout/tab-placeholder";
+import { OverviewScreen } from "@/features/overview/components/overview-screen";
 
 export default function OverviewPage() {
-  return (
-    <TabPlaceholder
-      title="Overview"
-      description="See charts and summaries for income, expenses, and net worth."
-    />
-  );
+  return <OverviewScreen />;
 }
