@@ -1,10 +1,11 @@
-import { TabPlaceholder } from "@/components/layout/tab-placeholder";
+import { Suspense } from "react";
+import { TransactionsScreen } from "@/features/transactions/components/transactions-screen";
+import { TransactionsSkeleton } from "@/features/transactions/components/transactions-skeleton";
 
 export default function TransactionsPage() {
   return (
-    <TabPlaceholder
-      title="Transactions"
-      description="Review recent activity, transfers, and transaction history."
-    />
+    <Suspense fallback={<TransactionsSkeleton />}>
+      <TransactionsScreen />
+    </Suspense>
   );
 }

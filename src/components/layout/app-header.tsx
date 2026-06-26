@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { AccountFilterSheet } from "@/features/accounts/components/account-filter-sheet";
 import { PeriodSelector } from "@/features/period/components/period-selector";
 import { UserSettingsDrawer } from "@/features/settings/components/user-settings-drawer";
+import { useHeaderAction } from "@/components/layout/header-action-provider";
 import { getTabByPathname } from "@/lib/navigation";
 import { Button } from "@/components/ui/button";
 
@@ -16,6 +17,7 @@ const PERIOD_SELECTOR_TABS = new Set([
 
 export function AppHeader() {
   const pathname = usePathname();
+  const { invokeAction } = useHeaderAction();
   const currentTab = getTabByPathname(pathname);
   const ActionIcon = currentTab?.actionIcon;
   const showPeriodSelector = currentTab
@@ -37,6 +39,7 @@ export function AppHeader() {
             className="shrink-0 rounded-full"
             aria-label={currentTab.actionLabel}
             type="button"
+            onClick={() => invokeAction(currentTab.id)}
           >
             <ActionIcon className="size-5" aria-hidden="true" />
           </Button>
