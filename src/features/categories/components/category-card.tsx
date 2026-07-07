@@ -1,5 +1,6 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import { CategoryIcon } from "@/features/categories/components/category-icon";
 import { getCategoryRemainingDisplay } from "@/features/categories/lib/category-display";
@@ -12,6 +13,7 @@ interface CategoryCardProps {
   highlighted?: boolean;
   onSelect?: (categoryId: string) => void;
   className?: string;
+  style?: CSSProperties;
 }
 
 export function CategoryCard({
@@ -19,6 +21,7 @@ export function CategoryCard({
   highlighted = false,
   onSelect,
   className,
+  style,
 }: CategoryCardProps) {
   const { displayAmount, isOverBudget, showHighlight } =
     getCategoryRemainingDisplay(category.budgetedAmount, category.spentAmount);
@@ -28,10 +31,11 @@ export function CategoryCard({
       href={`/transactions?categoryId=${category.id}`}
       onClick={() => onSelect?.(category.id)}
       className={cn(
-        "flex min-w-0 flex-col items-center gap-1 rounded-xl px-1 py-2 text-center transition-colors",
+        "flex h-full min-h-0 min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-1 py-1 text-center transition-colors",
         highlighted && "bg-accent/60 ring-1 ring-border/80",
         className,
       )}
+      style={style}
       aria-label={`${category.name}, remaining ${formatIdr(displayAmount)}, spent ${formatIdr(category.spentAmount)}`}
     >
       <span className="line-clamp-1 w-full text-[10px] font-medium leading-tight text-foreground">

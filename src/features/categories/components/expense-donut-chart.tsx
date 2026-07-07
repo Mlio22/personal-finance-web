@@ -120,11 +120,16 @@ export function ExpenseDonutChart({
   }, [categories]);
 
   return (
-    <div className={cn("relative mx-auto flex items-center justify-center", className)}>
+    <div
+      className={cn(
+        "relative flex size-full min-h-0 min-w-0 items-center justify-center",
+        className,
+      )}
+    >
       <svg
-        width={CHART_SIZE}
-        height={CHART_SIZE}
+        className="size-full max-h-full max-w-full"
         viewBox={`0 0 ${CHART_SIZE} ${CHART_SIZE}`}
+        preserveAspectRatio="xMidYMid meet"
         role="img"
         aria-label={`Expense breakdown chart, total expenses ${formatIdr(totalExpenses)}`}
       >
