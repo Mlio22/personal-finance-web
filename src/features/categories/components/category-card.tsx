@@ -1,5 +1,6 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import { CategoryIcon } from "@/features/categories/components/category-icon";
 import { getCategoryRemainingDisplay } from "@/features/categories/lib/category-display";
@@ -12,6 +13,27 @@ interface CategoryCardProps {
   highlighted?: boolean;
   onSelect?: (categoryId: string) => void;
   className?: string;
+  style?: CSSProperties;
+}
+
+function formatCompactIdr(amount: number): string {
+  if (amount >= 1_000_000) {
+    const millions = amount / 1_000_000;
+    const label = Number.isInteger(millions)
+      ? String(millions)
+      : millions.toFixed(1).replace(/\.0$/, "");
+    return `IDR ${label}M`;
+  }
+
+  if (amount >= 10_000) {
+    const thousands = amount / 1_000;
+    const label = Number.isInteger(thousands)
+      ? String(thousands)
+      : thousands.toFixed(1).replace(/\.0$/, "");
+    return `IDR ${label}K`;
+  }
+
+  return formatIdr(amount);
 }
 
 export function CategoryCard({
@@ -19,6 +41,7 @@ export function CategoryCard({
   highlighted = false,
   onSelect,
   className,
+  style,
 }: CategoryCardProps) {
   const { displayAmount, isOverBudget, showHighlight } =
     getCategoryRemainingDisplay(category.budgetedAmount, category.spentAmount);
@@ -28,38 +51,42 @@ export function CategoryCard({
       href={`/transactions?categoryId=${category.id}`}
       onClick={() => onSelect?.(category.id)}
       className={cn(
-        "flex min-w-0 flex-col items-center gap-1 rounded-xl px-1 py-2 text-center transition-colors",
-        highlighted && "bg-accent/60 ring-1 ring-border/80",
+        "flex h-full min-h-0 min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-1 py-2 text-center transition-colors hover:bg-muted/40",
+        highlighted && "bg-muted/60 ring-1 ring-border/70",
         className,
       )}
+      style={style}
       aria-label={`${category.name}, remaining ${formatIdr(displayAmount)}, spent ${formatIdr(category.spentAmount)}`}
     >
-      <span className="line-clamp-1 w-full text-[10px] font-medium leading-tight text-foreground">
+      <span className="line-clamp-1 w-full text-[11px] font-semibold leading-tight text-foreground">
         {category.name}
       </span>
 
       {showHighlight ? (
         <span
-          className="rounded-full px-1.5 py-0.5 text-[9px] font-semibold leading-none text-background"
+          className={cn(
+            "max-w-full truncate rounded-md px-1.5 py-0.5 text-[10px] font-semibold tabular-nums leading-none text-background",
+            isOverBudget && "text-white",
+          )}
           style={{ backgroundColor: category.color }}
         >
-          {formatIdr(displayAmount)}
+          {formatCompactIdr(displayAmount)}
         </span>
       ) : (
-        <span className="text-[9px] font-semibold leading-none text-muted-foreground">
-          {formatIdr(displayAmount)}
+        <span className="text-[10px] font-medium tabular-nums leading-none text-muted-foreground">
+          {formatCompactIdr(displayAmount)}
         </span>
       )}
 
       <CategoryIcon
         icon={category.icon}
         color={category.color}
-        className="flex size-7 shrink-0 items-center justify-center rounded-full"
+        className="flex size-9 shrink-0 items-center justify-center rounded-xl"
       />
 
       <span
         className={cn(
-          "text-[9px] font-semibold leading-none",
+          "max-w-full truncate text-[10px] font-semibold tabular-nums leading-none",
           category.spentAmount > 0 || isOverBudget
             ? undefined
             : "text-muted-foreground",
@@ -70,7 +97,7 @@ export function CategoryCard({
             : undefined
         }
       >
-        {formatIdr(category.spentAmount)}
+        {formatCompactIdr(category.spentAmount)}
       </span>
     </Link>
   );
