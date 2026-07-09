@@ -29,7 +29,6 @@ import { AccountIconPicker } from "@/features/accounts/components/account-icon-p
 import { AmountInputModal } from "@/components/amount-input";
 import { formatMoney } from "@/lib/format-currency";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import {
   Drawer,
@@ -156,12 +155,13 @@ export function AccountFormScreen({
             >
               Name
             </label>
-            <Input
+            <input
               id="account-name"
+              type="text"
               value={values.name}
               onChange={(event) => updateField("name", event.target.value)}
               placeholder="Account name"
-              className="h-auto border-0 bg-transparent px-0 py-0 text-[1.375rem] font-medium leading-tight shadow-none focus-visible:ring-0 dark:bg-transparent"
+              className="w-full min-h-[2rem] border-0 bg-transparent px-0 py-1 text-left text-[1.375rem] font-medium leading-tight text-foreground caret-foreground outline-none placeholder:text-muted-foreground"
               autoFocus={mode === "create"}
             />
           </div>
@@ -216,14 +216,15 @@ export function AccountFormScreen({
               >
                 Description
               </label>
-              <Input
+              <input
                 id="account-description"
+                type="text"
                 value={values.description}
                 onChange={(event) =>
                   updateField("description", event.target.value)
                 }
                 placeholder=""
-                className="mt-1 h-auto border-0 bg-transparent px-0 py-0 text-[0.9375rem] shadow-none focus-visible:ring-0 dark:bg-transparent"
+                className="mt-1 w-full min-h-[1.75rem] border-0 bg-transparent px-0 py-1 text-left text-[0.9375rem] text-foreground caret-foreground outline-none placeholder:text-muted-foreground"
               />
             </div>
           </div>
