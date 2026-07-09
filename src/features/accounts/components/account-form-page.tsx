@@ -9,6 +9,7 @@ import {
   applyFormValuesToAccount,
   createAccountFromForm,
   defaultFormValues,
+  deleteAccountFromMockCache,
   findAccountById,
   getClientMockAccountsResponse,
   upsertAccountInMockCache,
@@ -54,6 +55,12 @@ export function AccountFormPage({
     router.back();
   }
 
+  function invalidateAccountQueries() {
+    void queryClient.invalidateQueries({ queryKey: ["accounts"] });
+    void queryClient.invalidateQueries({ queryKey: ["overview"] });
+    void queryClient.invalidateQueries({ queryKey: ["transactions"] });
+  }
+
   function handleSubmit(values: AccountFormValues) {
     if (mode === "edit" && existingAccount) {
       upsertAccountInMockCache(
@@ -63,9 +70,14 @@ export function AccountFormPage({
       upsertAccountInMockCache(createAccountFromForm(values));
     }
 
-    void queryClient.invalidateQueries({ queryKey: ["accounts"] });
-    void queryClient.invalidateQueries({ queryKey: ["overview"] });
-    void queryClient.invalidateQueries({ queryKey: ["transactions"] });
+    invalidateAccountQueries();
+    router.push("/accounts");
+  }
+
+  function handleDelete() {
+    if (!existingAccount) return;
+    deleteAccountFromMockCache(existingAccount.id);
+    invalidateAccountQueries();
     router.push("/accounts");
   }
 
@@ -112,6 +124,7 @@ export function AccountFormPage({
       account={existingAccount}
       onClose={handleClose}
       onSubmit={handleSubmit}
+      onDelete={mode === "edit" ? handleDelete : undefined}
     />
   );
 }

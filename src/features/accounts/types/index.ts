@@ -12,7 +12,17 @@ export type AccountIconKind =
   | "gold"
   | "sos"
   | "travel"
-  | "qurban";
+  | "qurban"
+  | "piggy"
+  | "briefcase"
+  | "bank"
+  | "coins"
+  | "credit-card"
+  | "gift"
+  | "calculator"
+  | "plant"
+  | "safe"
+  | "hand";
 
 export interface Account {
   id: string;
@@ -47,7 +57,9 @@ export interface AccountFormValues {
   description: string;
   balance: number;
   creditLimit: number;
+  savingsTarget: number;
   includeInTotalBalance: boolean;
+  archived: boolean;
   color: string;
   icon: AccountIconKind;
 }

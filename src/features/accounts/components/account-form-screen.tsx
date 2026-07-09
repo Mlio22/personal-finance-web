@@ -1,7 +1,18 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Check, CircleDollarSign, FileText, Wallet, X } from "lucide-react";
+import {
+  Archive,
+  Check,
+  CircleDollarSign,
+  FileText,
+  HandCoins,
+  Trash2,
+  Vault,
+  Wallet,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 import type {
   Account,
   AccountFormMode,
@@ -14,6 +25,7 @@ import {
   getCurrencyLabel,
 } from "@/features/accounts/lib/account-form-options";
 import { AccountAvatar } from "@/features/accounts/components/account-avatar";
+import { AccountIconPicker } from "@/features/accounts/components/account-icon-picker";
 import { formatMoney } from "@/lib/format-currency";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,11 +46,19 @@ const FORM_TYPE_OPTIONS: AccountType[] = [
   "investment",
 ];
 
+const TYPE_ROW_ICONS: Record<AccountType, LucideIcon> = {
+  regular: Wallet,
+  debt: HandCoins,
+  savings: Vault,
+  investment: Vault,
+};
+
 interface AccountFormScreenProps {
   mode: AccountFormMode;
   initialValues: AccountFormValues;
   onClose: () => void;
   onSubmit: (values: AccountFormValues) => void;
+  onDelete?: () => void;
   account?: Account;
 }
 
@@ -47,23 +67,32 @@ export function AccountFormScreen({
   initialValues,
   onClose,
   onSubmit,
+  onDelete,
 }: AccountFormScreenProps) {
   const [values, setValues] = useState<AccountFormValues>(initialValues);
   const [typeOpen, setTypeOpen] = useState(false);
   const [currencyOpen, setCurrencyOpen] = useState(false);
   const [balanceOpen, setBalanceOpen] = useState(false);
-  const [creditLimitOpen, setCreditLimitOpen] = useState(false);
+  const [secondaryAmountOpen, setSecondaryAmountOpen] = useState(false);
+  const [iconPickerOpen, setIconPickerOpen] = useState(false);
 
   const title = mode === "edit" ? "Edit account" : "New account";
   const canSubmit = values.name.trim().length > 0;
+  const isSavingsLike =
+    values.type === "savings" || values.type === "investment";
+  const secondaryLabel = isSavingsLike ? "Goal" : "Credit limit";
+  const secondaryValue = isSavingsLike
+    ? values.savingsTarget
+    : values.creditLimit;
+  const TypeIcon = TYPE_ROW_ICONS[values.type] ?? Wallet;
 
   const balanceLabel = useMemo(
     () => formatMoney(values.balance, values.currency),
     [values.balance, values.currency],
   );
-  const creditLimitLabel = useMemo(
-    () => formatMoney(values.creditLimit, values.currency),
-    [values.creditLimit, values.currency],
+  const secondaryAmountLabel = useMemo(
+    () => formatMoney(secondaryValue, values.currency),
+    [secondaryValue, values.currency],
   );
 
   function updateField<K extends keyof AccountFormValues>(
@@ -78,9 +107,19 @@ export function AccountFormScreen({
     onSubmit(values);
   }
 
+  function handleDelete() {
+    if (!onDelete) return;
+    const confirmed = window.confirm(
+      "Delete this account? This cannot be undone.",
+    );
+    if (confirmed) {
+      onDelete();
+    }
+  }
+
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col bg-background">
-      <header className="sticky top-0 z-40 flex items-center gap-2 bg-background/95 px-3 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+      <header className="sticky top-0 z-40 flex items-center gap-2 bg-background/95 px-2 py-2.5 backdrop-blur supports-[backdrop-filter]:bg-background/80">
         <Button
           type="button"
           variant="ghost"
@@ -92,14 +131,14 @@ export function AccountFormScreen({
           <X className="size-5" strokeWidth={1.75} aria-hidden="true" />
         </Button>
 
-        <h1 className="flex-1 text-center text-base font-semibold text-foreground">
+        <h1 className="flex-1 text-center text-[1.0625rem] font-semibold text-foreground">
           {title}
         </h1>
 
         <Button
           type="button"
           size="sm"
-          className="rounded-full bg-[#c4b5fd] px-4 font-semibold text-[#1e1b4b] hover:bg-[#c4b5fd]/90"
+          className="rounded-full bg-[#c4b5fd] px-4 font-semibold text-[#1e1b4b] hover:bg-[#c4b5fd]/90 disabled:opacity-40"
           disabled={!canSubmit}
           onClick={handleDone}
         >
@@ -107,12 +146,12 @@ export function AccountFormScreen({
         </Button>
       </header>
 
-      <div className="flex flex-1 flex-col px-4 pb-8 pt-2">
-        <div className="mb-6 flex items-start justify-between gap-4">
+      <div className="flex flex-1 flex-col overflow-y-auto px-5 pb-10 pt-3">
+        <div className="mb-8 flex items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
             <label
               htmlFor="account-name"
-              className="mb-1 block text-sm font-medium text-section"
+              className="mb-1.5 block text-[0.8125rem] font-medium text-muted-foreground"
             >
               Name
             </label>
@@ -121,47 +160,58 @@ export function AccountFormScreen({
               value={values.name}
               onChange={(event) => updateField("name", event.target.value)}
               placeholder="Account name"
-              className="h-10 border-0 bg-transparent px-0 text-lg font-medium shadow-none focus-visible:ring-0 dark:bg-transparent"
+              className="h-auto border-0 bg-transparent px-0 py-0 text-[1.375rem] font-medium leading-tight shadow-none focus-visible:ring-0 dark:bg-transparent"
               autoFocus={mode === "create"}
             />
           </div>
 
-          <AccountAvatar
-            name={values.name || "Account"}
-            color={values.color}
-            icon={values.icon}
-            className="mt-1"
-          />
+          <button
+            type="button"
+            aria-label="Change account icon"
+            onClick={() => setIconPickerOpen(true)}
+            className="mt-1 shrink-0 rounded-xl transition-opacity hover:opacity-90 active:opacity-80"
+          >
+            <AccountAvatar
+              name={values.name || "Account"}
+              color={values.color}
+              icon={values.icon}
+              size="md"
+            />
+          </button>
         </div>
 
-        <section className="space-y-1">
-          <h2 className="px-1 text-sm font-medium text-section">Account</h2>
+        <section>
+          <h2 className="mb-1 text-[0.9375rem] font-medium text-[#a5b4fc]">
+            Account
+          </h2>
 
-          <FormRowButton
-            icon={Wallet}
+          <FormMetaRow
+            icon={TypeIcon}
             label="Type"
             value={ACCOUNT_TYPE_LABELS[values.type] ?? values.type}
+            valueClassName="text-[#a5b4fc]"
             onClick={() => setTypeOpen(true)}
           />
 
-          <FormRowButton
+          <FormMetaRow
             icon={CircleDollarSign}
             label="Account currency"
             value={getCurrencyLabel(values.currency)}
+            valueClassName="text-muted-foreground"
             onClick={() => setCurrencyOpen(true)}
           />
 
-          <div className="flex items-start gap-3 px-1 py-3">
+          <div className="flex items-start gap-3.5 py-3.5">
             <span
-              className="mt-0.5 flex size-9 shrink-0 items-center justify-center text-muted-foreground"
+              className="mt-0.5 flex size-6 shrink-0 items-center justify-center text-muted-foreground"
               aria-hidden="true"
             >
-              <FileText className="size-5" strokeWidth={1.75} />
+              <FileText className="size-5" strokeWidth={1.6} />
             </span>
             <div className="min-w-0 flex-1">
               <label
                 htmlFor="account-description"
-                className="block text-sm font-medium text-foreground"
+                className="block text-[0.9375rem] font-medium text-foreground"
               >
                 Description
               </label>
@@ -171,32 +221,36 @@ export function AccountFormScreen({
                 onChange={(event) =>
                   updateField("description", event.target.value)
                 }
-                placeholder="Optional"
-                className="mt-1 h-9 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 dark:bg-transparent"
+                placeholder=""
+                className="mt-1 h-auto border-0 bg-transparent px-0 py-0 text-[0.9375rem] shadow-none focus-visible:ring-0 dark:bg-transparent"
               />
             </div>
           </div>
         </section>
 
-        <div className="my-4 border-t border-border/60" />
+        <div className="my-2 border-t border-border/50" />
 
-        <section className="space-y-1">
-          <h2 className="px-1 text-sm font-medium text-section">Balance</h2>
+        <section className="pt-3">
+          <h2 className="mb-1 text-[0.9375rem] font-medium text-[#a5b4fc]">
+            Balance
+          </h2>
 
-          <FormValueRow
+          <FormAmountRow
             label="Account balance"
             value={balanceLabel}
+            emphasize={values.balance !== 0}
             onClick={() => setBalanceOpen(true)}
           />
 
-          <FormValueRow
-            label="Credit limit"
-            value={creditLimitLabel}
-            onClick={() => setCreditLimitOpen(true)}
+          <FormAmountRow
+            label={secondaryLabel}
+            value={secondaryAmountLabel}
+            emphasize={secondaryValue !== 0}
+            onClick={() => setSecondaryAmountOpen(true)}
           />
 
-          <div className="flex items-center justify-between gap-3 px-1 py-3">
-            <span className="text-sm font-medium text-foreground">
+          <div className="flex items-center justify-between gap-3 py-3.5">
+            <span className="text-[0.9375rem] font-medium text-foreground">
               Include in total balance
             </span>
             <Switch
@@ -204,11 +258,57 @@ export function AccountFormScreen({
               onCheckedChange={(checked) =>
                 updateField("includeInTotalBalance", checked)
               }
-              className="data-checked:bg-[#818cf8]"
+              className="data-checked:bg-[#6366f1] data-unchecked:bg-[#3a3a3c]"
               aria-label="Include in total balance"
             />
           </div>
         </section>
+
+        {mode === "edit" ? (
+          <>
+            <div className="my-2 border-t border-border/50" />
+
+            <section className="pt-1">
+              <div className="flex items-center justify-between gap-3 py-3.5">
+                <span className="flex items-center gap-3.5">
+                  <Archive
+                    className="size-5 text-muted-foreground"
+                    strokeWidth={1.6}
+                    aria-hidden="true"
+                  />
+                  <span className="text-[0.9375rem] font-medium text-foreground">
+                    Archive account
+                  </span>
+                </span>
+                <Switch
+                  checked={values.archived}
+                  onCheckedChange={(checked) =>
+                    updateField("archived", checked)
+                  }
+                  className="data-checked:bg-[#6366f1] data-unchecked:bg-[#3a3a3c]"
+                  aria-label="Archive account"
+                />
+              </div>
+
+              <div className="border-t border-border/50" />
+
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="flex w-full items-center gap-3.5 py-3.5 text-left transition-opacity hover:opacity-80"
+              >
+                <Trash2
+                  className="size-5 text-[#f87171]"
+                  strokeWidth={1.6}
+                  aria-hidden="true"
+                />
+                <span className="text-[0.9375rem] font-medium text-[#f87171]">
+                  Delete account
+                </span>
+              </button>
+            </section>
+          </>
+        ) : null}
       </div>
 
       <OptionPickerDrawer
@@ -245,45 +345,64 @@ export function AccountFormScreen({
       />
 
       <AmountEditorDrawer
-        open={creditLimitOpen}
-        onOpenChange={setCreditLimitOpen}
-        title="Credit limit"
+        open={secondaryAmountOpen}
+        onOpenChange={setSecondaryAmountOpen}
+        title={secondaryLabel}
         currency={values.currency}
-        value={values.creditLimit}
-        onSave={(amount) => updateField("creditLimit", amount)}
+        value={secondaryValue}
+        onSave={(amount) =>
+          updateField(isSavingsLike ? "savingsTarget" : "creditLimit", amount)
+        }
+      />
+
+      <AccountIconPicker
+        open={iconPickerOpen}
+        onOpenChange={setIconPickerOpen}
+        icon={values.icon}
+        color={values.color}
+        onSave={({ icon, color }) => {
+          setValues((current) => ({ ...current, icon, color }));
+        }}
       />
     </div>
   );
 }
 
-function FormRowButton({
+function FormMetaRow({
   icon: Icon,
   label,
   value,
+  valueClassName,
   onClick,
 }: {
-  icon: typeof Wallet;
+  icon: LucideIcon;
   label: string;
   value: string;
+  valueClassName?: string;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center gap-3 rounded-xl px-1 py-3 text-left transition-colors hover:bg-muted/40"
+      className="flex w-full items-center gap-3.5 py-3.5 text-left transition-opacity hover:opacity-90"
     >
       <span
-        className="flex size-9 shrink-0 items-center justify-center text-muted-foreground"
+        className="flex size-6 shrink-0 items-center justify-center text-muted-foreground"
         aria-hidden="true"
       >
-        <Icon className="size-5" strokeWidth={1.75} />
+        <Icon className="size-5" strokeWidth={1.6} />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-sm font-medium text-foreground">
+        <span className="block text-[0.8125rem] font-medium text-muted-foreground">
           {label}
         </span>
-        <span className="mt-0.5 block truncate text-sm text-[#a5b4fc]">
+        <span
+          className={cn(
+            "mt-0.5 block truncate text-[0.9375rem] font-medium",
+            valueClassName,
+          )}
+        >
           {value}
         </span>
       </span>
@@ -291,23 +410,34 @@ function FormRowButton({
   );
 }
 
-function FormValueRow({
+function FormAmountRow({
   label,
   value,
+  emphasize,
   onClick,
 }: {
   label: string;
   value: string;
+  emphasize?: boolean;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center justify-between gap-3 rounded-xl px-1 py-3 text-left transition-colors hover:bg-muted/40"
+      className="flex w-full items-center justify-between gap-3 py-3.5 text-left transition-opacity hover:opacity-90"
     >
-      <span className="text-sm font-medium text-foreground">{label}</span>
-      <span className="text-sm tabular-nums text-muted-foreground">{value}</span>
+      <span className="text-[0.9375rem] font-medium text-foreground">
+        {label}
+      </span>
+      <span
+        className={cn(
+          "text-[0.9375rem] tabular-nums",
+          emphasize ? "font-medium text-positive" : "text-muted-foreground",
+        )}
+      >
+        {value}
+      </span>
     </button>
   );
 }
@@ -329,7 +459,7 @@ function OptionPickerDrawer({
 }) {
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="px-4 pb-8">
+      <DrawerContent className="mx-auto max-w-lg px-4 pb-8">
         <DrawerHeader className="px-0">
           <DrawerTitle>{title}</DrawerTitle>
         </DrawerHeader>
@@ -387,7 +517,7 @@ function AmountEditorDrawer({
         onOpenChange(nextOpen);
       }}
     >
-      <DrawerContent className="px-4 pb-8">
+      <DrawerContent className="mx-auto max-w-lg px-4 pb-8">
         <DrawerHeader className="px-0">
           <DrawerTitle>{title}</DrawerTitle>
         </DrawerHeader>

@@ -108,11 +108,11 @@ function slugifyName(name: string): string {
   return slug || "account";
 }
 
-export function createAccountFromForm(values: AccountFormValues): Account {
-  const id = `${slugifyName(values.name)}-${Date.now().toString(36)}`;
+function formValuesToAccountFields(values: AccountFormValues) {
+  const isSavingsLike =
+    values.type === "savings" || values.type === "investment";
 
   return {
-    id,
     name: values.name.trim() || "Untitled account",
     balance: values.balance,
     currency: values.currency,
@@ -120,8 +120,23 @@ export function createAccountFromForm(values: AccountFormValues): Account {
     color: values.color,
     icon: values.icon,
     description: values.description.trim() || undefined,
-    creditLimit: values.creditLimit,
+    creditLimit:
+      values.type === "debt" || values.type === "regular"
+        ? values.creditLimit
+        : undefined,
     includeInTotalBalance: values.includeInTotalBalance,
+    archived: values.archived,
+    isSavingsGoal: isSavingsLike ? values.savingsTarget > 0 : undefined,
+    savingsTarget: isSavingsLike ? values.savingsTarget : undefined,
+  };
+}
+
+export function createAccountFromForm(values: AccountFormValues): Account {
+  const id = `${slugifyName(values.name)}-${Date.now().toString(36)}`;
+
+  return {
+    id,
+    ...formValuesToAccountFields(values),
     sortOrder: Date.now(),
   };
 }
@@ -132,15 +147,8 @@ export function applyFormValuesToAccount(
 ): Account {
   return {
     ...account,
+    ...formValuesToAccountFields(values),
     name: values.name.trim() || account.name,
-    balance: values.balance,
-    currency: values.currency,
-    type: values.type,
-    color: values.color,
-    icon: values.icon,
-    description: values.description.trim() || undefined,
-    creditLimit: values.creditLimit,
-    includeInTotalBalance: values.includeInTotalBalance,
   };
 }
 
@@ -175,6 +183,20 @@ export function upsertAccountInMockCache(account: Account): AccountsResponse {
   return clientMockCache;
 }
 
+export function deleteAccountFromMockCache(accountId: string): AccountsResponse {
+  const current = getClientMockAccountsResponse();
+
+  clientMockCache = recomputeTotals({
+    accounts: current.accounts.filter((item) => item.id !== accountId),
+    savings: current.savings.filter((item) => item.id !== accountId),
+    investments: current.investments.filter((item) => item.id !== accountId),
+    archived: current.archived.filter((item) => item.id !== accountId),
+    totals: current.totals,
+  });
+
+  return clientMockCache;
+}
+
 export function accountToFormValues(account: Account): AccountFormValues {
   return {
     name: account.name,
@@ -183,7 +205,9 @@ export function accountToFormValues(account: Account): AccountFormValues {
     description: account.description ?? "",
     balance: account.balance,
     creditLimit: account.creditLimit ?? 0,
+    savingsTarget: account.savingsTarget ?? 0,
     includeInTotalBalance: account.includeInTotalBalance ?? true,
+    archived: account.archived ?? false,
     color: account.color ?? "#3B82F6",
     icon: account.icon ?? "card",
   };
@@ -199,8 +223,16 @@ export function defaultFormValues(
     description: "",
     balance: 0,
     creditLimit: 0,
+    savingsTarget: 0,
     includeInTotalBalance: true,
-    color: type === "savings" ? "#EC4899" : type === "debt" ? "#F97316" : "#3B82F6",
-    icon: type === "savings" ? "vault" : type === "debt" ? "cash" : "card",
+    archived: false,
+    color:
+      type === "savings"
+        ? "#EC4899"
+        : type === "debt"
+          ? "#F97316"
+          : "#3B82F6",
+    icon:
+      type === "savings" ? "vault" : type === "debt" ? "cash" : "card",
   };
 }
