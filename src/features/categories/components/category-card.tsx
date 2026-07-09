@@ -8,8 +8,11 @@ import type { CategorySummaryItem } from "@/features/categories/types";
 import { formatIdr } from "@/lib/format-currency";
 import { cn } from "@/lib/utils";
 
+type CategoryCardDensity = "edge" | "flank";
+
 interface CategoryCardProps {
   category: CategorySummaryItem;
+  density?: CategoryCardDensity;
   highlighted?: boolean;
   onSelect?: (categoryId: string) => void;
   className?: string;
@@ -36,105 +39,89 @@ function formatCompactIdr(amount: number): string {
   return formatIdr(amount);
 }
 
-function getCategoryDescription(
-  category: CategorySummaryItem,
-  isOverBudget: boolean,
-  displayAmount: number,
-  remaining: number,
-): string {
-  if (isOverBudget) {
-    return `Over budget by ${formatCompactIdr(displayAmount)}`;
-  }
-
-  if (category.budgetedAmount > 0 && remaining > 0) {
-    return `${formatCompactIdr(remaining)} remaining`;
-  }
-
-  if (category.budgetedAmount > 0 && remaining === 0) {
-    return "Budget fully used";
-  }
-
-  if (category.budgetedAmount === 0 && category.spentAmount > 0) {
-    return "No budget limit";
-  }
-
-  return "No spending this period";
-}
-
 export function CategoryCard({
   category,
+  density = "flank",
   highlighted = false,
   onSelect,
   className,
   style,
 }: CategoryCardProps) {
-  const { displayAmount, isOverBudget, remaining } =
+  const { displayAmount, isOverBudget, showHighlight } =
     getCategoryRemainingDisplay(category.budgetedAmount, category.spentAmount);
-  const description = getCategoryDescription(
-    category,
-    isOverBudget,
-    displayAmount,
-    remaining,
-  );
+  const isEdge = density === "edge";
 
   return (
     <Link
       href={`/transactions?categoryId=${category.id}`}
       onClick={() => onSelect?.(category.id)}
       className={cn(
-        "block min-w-0 rounded-xl px-1 py-2 text-left transition-colors hover:bg-muted/40",
+        "flex min-w-0 flex-col items-center rounded-xl text-center transition-colors hover:bg-muted/40",
+        isEdge
+          ? "gap-1.5 px-1 py-2"
+          : "h-full justify-center gap-2 px-1.5 py-3",
         highlighted && "bg-muted/60 ring-1 ring-border/70",
         className,
       )}
       style={style}
-      aria-label={`${category.name}, spent ${formatIdr(category.spentAmount)}, budgeted ${formatIdr(category.budgetedAmount)}`}
+      aria-label={`${category.name}, remaining ${formatIdr(displayAmount)}, spent ${formatIdr(category.spentAmount)}`}
     >
-      <div className="flex min-w-0 items-start gap-2">
-        <CategoryIcon
-          icon={category.icon}
-          color={category.color}
-          className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-xl"
-        />
+      <span
+        className={cn(
+          "line-clamp-1 w-full font-semibold leading-tight text-foreground",
+          isEdge ? "text-[10px]" : "text-[11px]",
+        )}
+      >
+        {category.name}
+      </span>
 
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-[11px] font-semibold leading-tight text-foreground">
-            {category.name}
-          </p>
+      {showHighlight ? (
+        <span
+          className={cn(
+            "max-w-full truncate rounded-full px-2 py-0.5 font-semibold tabular-nums leading-none text-background",
+            isEdge ? "text-[9px]" : "text-[10px]",
+            isOverBudget && "text-white",
+          )}
+          style={{ backgroundColor: category.color }}
+        >
+          {formatCompactIdr(displayAmount)}
+        </span>
+      ) : (
+        <span
+          className={cn(
+            "font-medium tabular-nums leading-none text-muted-foreground",
+            isEdge ? "text-[9px]" : "text-[10px]",
+          )}
+        >
+          {formatCompactIdr(displayAmount)}
+        </span>
+      )}
 
-          <div className="mt-1 flex items-baseline justify-between gap-2">
-            <span
-              className={cn(
-                "shrink-0 text-[10px] font-semibold tabular-nums leading-none",
-                category.spentAmount > 0 || isOverBudget
-                  ? undefined
-                  : "text-muted-foreground",
-              )}
-              style={
-                category.spentAmount > 0 || isOverBudget
-                  ? { color: category.color }
-                  : undefined
-              }
-            >
-              {formatCompactIdr(category.spentAmount)}
-            </span>
+      <CategoryIcon
+        icon={category.icon}
+        color={category.color}
+        className={cn(
+          "flex shrink-0 items-center justify-center rounded-xl",
+          isEdge ? "size-8" : "size-10",
+        )}
+      />
 
-            <span
-              className={cn(
-                "truncate text-right text-[10px] font-semibold tabular-nums leading-none",
-                category.budgetedAmount > 0
-                  ? "text-foreground"
-                  : "text-muted-foreground",
-              )}
-            >
-              {formatCompactIdr(category.budgetedAmount)}
-            </span>
-          </div>
-
-          <p className="mt-1 text-[9px] leading-snug wrap-break-word text-muted-foreground">
-            {description}
-          </p>
-        </div>
-      </div>
+      <span
+        className={cn(
+          "max-w-full truncate font-semibold tabular-nums leading-none",
+          isEdge ? "text-[9px]" : "text-[10px]",
+          category.spentAmount > 0 || isOverBudget
+            ? undefined
+            : "text-muted-foreground",
+        )}
+        style={
+          category.spentAmount > 0 || isOverBudget
+            ? { color: category.color }
+            : undefined
+        }
+      >
+        {formatCompactIdr(category.spentAmount)}
+      </span>
     </Link>
   );
 }
