@@ -1,95 +1,344 @@
 import type { Account, AccountsResponse } from "@/features/accounts/types";
 
-export const MOCK_ACCOUNTS_RESPONSE: AccountsResponse = {
-  accounts: [
+function randomInt(min: number, max: number): number {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+/** Whole IDR amounts with optional rounding step for more natural-looking balances. */
+function randomIdr(min: number, max: number, step = 1): number {
+  const low = Math.floor(min / step);
+  const high = Math.floor(max / step);
+  return randomInt(low, high) * step;
+}
+
+function randomUsd(min: number, max: number, decimals = 2): number {
+  const factor = 10 ** decimals;
+  return randomInt(Math.round(min * factor), Math.round(max * factor)) / factor;
+}
+
+function maybeZero(chance = 0.25): boolean {
+  return Math.random() < chance;
+}
+
+function sumIdrBalances(accounts: Account[]): number {
+  return accounts.reduce((sum, account) => {
+    if (account.currency !== "IDR") {
+      return sum;
+    }
+    return sum + account.balance;
+  }, 0);
+}
+
+function createMockAccounts(): Account[] {
+  return [
     {
       id: "cash",
       name: "Cash",
-      balance: 133_000,
+      balance: randomIdr(50_000, 500_000, 1_000),
       currency: "IDR",
       type: "regular",
-      color: "#2dd4bf",
+      color: "#14B8A6",
+      icon: "wallet",
       isDefault: true,
       sortOrder: 1,
     },
     {
       id: "jenius",
       name: "Jenius (BTPN)",
-      balance: 65_508,
+      balance: randomIdr(10_000, 2_000_000, 1),
       currency: "IDR",
       type: "regular",
-      color: "#60a5fa",
+      color: "#3B82F6",
+      icon: "card",
       sortOrder: 2,
     },
     {
       id: "dana",
       name: "Dana",
-      balance: 15_405,
+      balance: randomIdr(5_000, 250_000, 1),
       currency: "IDR",
       type: "regular",
-      color: "#22d3ee",
+      color: "#22D3EE",
+      icon: "wallet",
       sortOrder: 3,
     },
     {
       id: "mandiri",
       name: "Bank Mandiri",
-      balance: 438_016,
+      balance: randomIdr(100_000, 5_000_000, 1),
       currency: "IDR",
       type: "regular",
-      color: "#3b82f6",
+      color: "#0EA5E9",
+      icon: "card",
       sortOrder: 4,
     },
     {
       id: "jago",
       name: "Bank Jago",
-      balance: 20_000,
+      balance: randomIdr(0, 500_000, 1_000),
       currency: "IDR",
       type: "regular",
-      color: "#facc15",
+      color: "#FACC15",
+      icon: "card",
       sortOrder: 5,
     },
     {
       id: "ocbc",
       name: "OCBC",
-      balance: 1_280_942,
+      balance: randomIdr(200_000, 8_000_000, 1),
       currency: "IDR",
       type: "regular",
-      color: "#f472b6",
+      color: "#EC4899",
+      icon: "card",
       sortOrder: 6,
     },
-  ],
-  savings: [
     {
-      id: "tabungan-bca",
-      name: "Tabungan (BCA)",
-      balance: 1_050_000,
+      id: "boc",
+      name: "Bank of China",
+      balance: randomIdr(100_000, 3_000_000, 1_000),
+      currency: "IDR",
+      type: "regular",
+      color: "#EF4444",
+      icon: "card",
+      sortOrder: 7,
+    },
+  ];
+}
+
+function createMockSavings(): Account[] {
+  const emergencyTarget = randomIdr(5_000_000, 15_000_000, 100_000);
+  const travelTarget = randomIdr(15_000_000, 40_000_000, 1_000_000);
+  const qurbanTarget = randomIdr(2_000_000, 8_000_000, 100_000);
+
+  const emergencyBalance = randomIdr(
+    Math.floor(emergencyTarget * 0.2),
+    emergencyTarget,
+    1_000,
+  );
+  const travelBalance = maybeZero(0.4)
+    ? 0
+    : randomIdr(100_000, Math.floor(travelTarget * 0.6), 1_000);
+  const qurbanBalance = maybeZero(0.5)
+    ? 0
+    : randomIdr(50_000, Math.floor(qurbanTarget * 0.7), 1_000);
+
+  return [
+    {
+      id: "tabungan-darurat-bca",
+      name: "Tabungan darurat (BCA)",
+      balance: emergencyBalance,
       currency: "IDR",
       type: "savings",
-      color: "#60a5fa",
+      color: "#374151",
+      icon: "sos",
       isSavingsGoal: true,
-      savingsTarget: 3_530_000,
+      savingsTarget: emergencyTarget,
       sortOrder: 1,
     },
     {
-      id: "bibit-darurat",
-      name: "Akumulasi bibit pasar uang (darurat)",
-      balance: 13_424_905,
+      id: "jalan-jalan",
+      name: "Jalan Jalan",
+      balance: travelBalance,
       currency: "IDR",
       type: "savings",
-      color: "#4ade80",
+      color: "#EC4899",
+      icon: "travel",
       isSavingsGoal: true,
-      savingsTarget: 15_000_000,
+      savingsTarget: travelTarget,
+      goalLabel: "Goal: Japan (Feb / Apr 2027)",
       sortOrder: 2,
     },
-  ],
+    {
+      id: "tabungan-qurban",
+      name: "Tabungan Qurban",
+      balance: qurbanBalance,
+      currency: "IDR",
+      type: "savings",
+      color: "#F59E0B",
+      icon: "qurban",
+      isSavingsGoal: true,
+      savingsTarget: qurbanTarget,
+      goalLabel: `${randomInt(3, 18)} months left`,
+      sortOrder: 3,
+    },
+    {
+      id: "tabungan-emas",
+      name: "Tabungan emas",
+      balance: randomInt(1, 12),
+      currency: "XAUg",
+      type: "savings",
+      color: "#FACC15",
+      icon: "gold",
+      sortOrder: 4,
+    },
+  ];
+}
+
+function createMockInvestments(): Account[] {
+  const obligasiTarget = randomIdr(5_000_000, 20_000_000, 100_000);
+  const obligasiBalance = randomIdr(
+    Math.floor(obligasiTarget * 0.05),
+    Math.floor(obligasiTarget * 0.8),
+    1_000,
+  );
+
+  return [
+    {
+      id: "bibit-cash",
+      name: "Investasi bibit (cash / RDN)",
+      balance: randomIdr(5_000, 500_000, 1),
+      currency: "IDR",
+      type: "investment",
+      color: "#10B981",
+      icon: "cash",
+      sortOrder: 1,
+    },
+    {
+      id: "bibit-pasar-uang",
+      name: "Akumulasi bibit pasar uang (darurat)",
+      balance: randomIdr(1_000_000, 25_000_000, 1),
+      currency: "IDR",
+      type: "investment",
+      color: "#10B981",
+      icon: "sparkle",
+      sortOrder: 2,
+    },
+    {
+      id: "bibit-obligasi",
+      name: "Akumulasi bibit obligasi",
+      balance: obligasiBalance,
+      currency: "IDR",
+      type: "investment",
+      color: "#10B981",
+      icon: "vault",
+      isSavingsGoal: true,
+      savingsTarget: obligasiTarget,
+      sortOrder: 3,
+    },
+    {
+      id: "bibit-saham",
+      name: "Akumulasi Investasi bibit saham",
+      balance: randomIdr(100_000, 5_000_000, 1),
+      currency: "IDR",
+      type: "investment",
+      color: "#10B981",
+      icon: "chart",
+      sortOrder: 4,
+    },
+    {
+      id: "net-bibit",
+      name: "NET Bibit",
+      balance: maybeZero(0.6) ? 0 : randomIdr(10_000, 1_000_000, 1),
+      currency: "IDR",
+      type: "investment",
+      color: "#10B981",
+      icon: "bars",
+      sortOrder: 5,
+    },
+    {
+      id: "pluang-cash",
+      name: "Investasi Pluang (cash)",
+      balance: randomIdr(10_000, 500_000, 1),
+      currency: "IDR",
+      type: "investment",
+      color: "#10B981",
+      icon: "cash",
+      sortOrder: 6,
+    },
+    {
+      id: "pluang-cash-usd",
+      name: "Investasi Pluang (cash USD)",
+      balance: maybeZero(0.5) ? 0 : randomUsd(1, 250),
+      currency: "USD",
+      type: "investment",
+      color: "#FACC15",
+      icon: "dollar",
+      sortOrder: 7,
+    },
+    {
+      id: "pluang-emas",
+      name: "Investasi Pluang (emas)",
+      balance: randomIdr(500_000, 12_000_000, 1),
+      currency: "IDR",
+      type: "investment",
+      color: "#F59E0B",
+      icon: "gold",
+      sortOrder: 8,
+    },
+    {
+      id: "pluang-saham",
+      name: "Akumulasi Saham Pluang",
+      balance: maybeZero(0.3) ? 0 : randomUsd(0.1, 50),
+      currency: "USD",
+      type: "investment",
+      color: "#374151",
+      icon: "vault",
+      sortOrder: 9,
+    },
+    {
+      id: "pluang-btc",
+      name: "Investasi Pluang (BTC)",
+      balance: maybeZero(0.55) ? 0 : randomIdr(50_000, 3_000_000, 1),
+      currency: "IDR",
+      type: "investment",
+      color: "#F97316",
+      icon: "vault",
+      sortOrder: 10,
+    },
+  ];
+}
+
+/** Empty shell used during SSR to avoid hydration mismatches from Math.random(). */
+export const EMPTY_ACCOUNTS_RESPONSE: AccountsResponse = {
+  accounts: [],
+  savings: [],
+  investments: [],
+  archived: [],
   totals: {
-    accounts: 1_952_871,
-    savings: 31_850_406.81,
+    accounts: 0,
+    savings: 0,
+    investments: 0,
   },
 };
 
-/** Regular (non-savings) accounts for the header account filter. */
-export const MOCK_ACCOUNTS: Account[] = MOCK_ACCOUNTS_RESPONSE.accounts;
+/** Build a fresh randomized mock dataset. */
+export function createMockAccountsResponse(): AccountsResponse {
+  const accounts = createMockAccounts();
+  const savings = createMockSavings();
+  const investments = createMockInvestments();
+  const archived: Account[] = [];
+
+  return {
+    accounts,
+    savings,
+    investments,
+    archived,
+    totals: {
+      accounts: sumIdrBalances(accounts),
+      savings: sumIdrBalances(savings),
+      investments: sumIdrBalances(investments),
+    },
+  };
+}
+
+let clientMockCache: AccountsResponse | null = null;
+
+/**
+ * Returns a single randomized mock dataset for the current browser session.
+ * Safe to call from multiple hooks — amounts stay consistent across the UI.
+ * On the server, returns an empty shell to avoid hydration mismatches.
+ */
+export function getClientMockAccountsResponse(): AccountsResponse {
+  if (typeof window === "undefined") {
+    return EMPTY_ACCOUNTS_RESPONSE;
+  }
+
+  if (!clientMockCache) {
+    clientMockCache = createMockAccountsResponse();
+  }
+
+  return clientMockCache;
+}
 
 export const ALL_ACCOUNTS_FILTER_ID = "all";
 

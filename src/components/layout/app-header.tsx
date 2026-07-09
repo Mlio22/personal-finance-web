@@ -24,10 +24,13 @@ export function AppHeader() {
     ? PERIOD_SELECTOR_TABS.has(currentTab.id)
     : false;
   const isBudgetTab = currentTab?.id === "budget";
+  const isAccountsTab = currentTab?.id === "accounts";
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border/60 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-      <div className="mx-auto flex h-14 max-w-lg items-center gap-2 px-3">
+    <header className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+      <div
+        className={cnHeader(isAccountsTab)}
+      >
         <UserSettingsDrawer />
 
         <AccountFilterSheet />
@@ -36,12 +39,12 @@ export function AppHeader() {
           <Button
             variant="ghost"
             size="icon"
-            className="shrink-0 rounded-full"
+            className="shrink-0 rounded-full text-foreground"
             aria-label={currentTab.actionLabel}
             type="button"
             onClick={() => invokeAction(currentTab.id)}
           >
-            <ActionIcon className="size-5" aria-hidden="true" />
+            <ActionIcon className="size-5" strokeWidth={1.75} aria-hidden="true" />
           </Button>
         ) : (
           <span className="size-9 shrink-0" aria-hidden="true" />
@@ -51,4 +54,10 @@ export function AppHeader() {
       {showPeriodSelector ? <PeriodSelector locked={isBudgetTab} /> : null}
     </header>
   );
+}
+
+function cnHeader(isAccountsTab: boolean) {
+  return isAccountsTab
+    ? "mx-auto flex h-16 max-w-lg items-center gap-2 px-3"
+    : "mx-auto flex h-14 max-w-lg items-center gap-2 border-b border-border/60 px-3";
 }

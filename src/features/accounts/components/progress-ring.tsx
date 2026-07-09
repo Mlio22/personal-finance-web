@@ -5,13 +5,16 @@ interface ProgressRingProps {
   size?: number;
   strokeWidth?: number;
   className?: string;
+  /** When true, show the raw progress number without a % suffix (MoneyIQ style). */
+  showPercentSign?: boolean;
 }
 
 export function ProgressRing({
   progress,
-  size = 44,
+  size = 40,
   strokeWidth = 3,
   className,
+  showPercentSign = false,
 }: ProgressRingProps) {
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -45,11 +48,12 @@ export function ProgressRing({
           strokeDasharray={circumference}
           strokeDashoffset={offset}
           strokeLinecap="round"
-          className="text-positive transition-[stroke-dashoffset] duration-300"
+          className="text-progress transition-[stroke-dashoffset] duration-300"
         />
       </svg>
-      <span className="absolute inset-0 flex items-center justify-center text-[0.65rem] font-semibold text-foreground">
-        {clampedProgress}%
+      <span className="absolute inset-0 flex items-center justify-center text-[0.7rem] font-semibold tabular-nums text-foreground">
+        {clampedProgress}
+        {showPercentSign ? "%" : ""}
       </span>
     </div>
   );
