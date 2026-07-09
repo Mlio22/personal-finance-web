@@ -23,6 +23,7 @@ export function SavingsAccountRow({
   const isZero = account.balance === 0;
   const hasGoal = Boolean(account.isSavingsGoal && account.savingsTarget);
   const description = getAccountDescription(account);
+  const hasDescription = description.length > 0;
 
   return (
     <button
@@ -40,12 +41,14 @@ export function SavingsAccountRow({
       />
 
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold text-foreground">{account.name}</p>
+        <p className="text-sm font-semibold leading-snug text-foreground">
+          {account.name}
+        </p>
 
         <div className="mt-0.5 flex items-center gap-2">
           <p
             className={cn(
-              "min-w-0 flex-1 text-sm tabular-nums",
+              "min-w-0 flex-1 text-sm leading-snug tabular-nums",
               isZero ? "text-muted-foreground" : "text-positive",
             )}
           >
@@ -56,7 +59,7 @@ export function SavingsAccountRow({
 
           {hasGoal ? (
             <div className="flex shrink-0 items-center gap-2.5">
-              <p className="text-sm font-medium tabular-nums text-foreground">
+              <p className="text-sm font-medium leading-snug tabular-nums text-foreground">
                 {formatMoney(account.savingsTarget ?? 0, account.currency, {
                   maximumFractionDigits: 2,
                 })}
@@ -66,8 +69,8 @@ export function SavingsAccountRow({
           ) : null}
         </div>
 
-        {description ? (
-          <p className="mt-0.5 break-words text-xs leading-relaxed text-muted-foreground">
+        {hasDescription ? (
+          <p className="mt-px break-words text-xs leading-snug text-muted-foreground">
             {description}
           </p>
         ) : null}

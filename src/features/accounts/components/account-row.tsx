@@ -15,6 +15,7 @@ interface AccountRowProps {
 export function AccountRow({ account, onSelect, className }: AccountRowProps) {
   const isZero = account.balance === 0;
   const description = getAccountDescription(account);
+  const hasDescription = description.length > 0;
 
   return (
     <button
@@ -33,15 +34,18 @@ export function AccountRow({ account, onSelect, className }: AccountRowProps) {
       />
 
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold text-foreground">{account.name}</p>
-        {description ? (
-          <p className="mt-0.5 break-words text-xs leading-relaxed text-muted-foreground">
+        <p className="text-sm font-semibold leading-snug text-foreground">
+          {account.name}
+        </p>
+        {hasDescription ? (
+          <p className="mt-px break-words text-xs leading-snug text-muted-foreground">
             {description}
           </p>
         ) : null}
         <p
           className={cn(
-            "mt-0.5 text-sm tabular-nums",
+            "text-sm leading-snug tabular-nums",
+            hasDescription ? "mt-px" : "mt-0.5",
             isZero ? "text-muted-foreground" : "text-positive",
           )}
         >
