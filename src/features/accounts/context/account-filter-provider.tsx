@@ -11,7 +11,6 @@ import {
 import {
   ALL_ACCOUNTS_FILTER_ID,
   getTotalBalance,
-  MOCK_ACCOUNTS,
 } from "@/features/accounts/data/mock-accounts";
 import { useAccounts } from "@/features/accounts/hooks/use-accounts";
 import type { Account } from "@/features/accounts/types";
@@ -35,7 +34,7 @@ export function AccountFilterProvider({ children }: { children: ReactNode }) {
   );
   const { data } = useAccounts();
 
-  const accounts = data?.accounts ?? MOCK_ACCOUNTS;
+  const accounts = useMemo(() => data?.accounts ?? [], [data?.accounts]);
   const totalBalance = data?.totals.accounts ?? getTotalBalance(accounts);
 
   const selectedAccount = useMemo(() => {
