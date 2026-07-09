@@ -144,7 +144,7 @@ export function AmountInputModal({
         ) : null}
 
         <div
-          className="grid grid-cols-5 grid-rows-[repeat(4,minmax(3.75rem,1fr))] gap-px border-t border-[#2a2a2a] bg-[#2a2a2a]"
+          className="grid grid-cols-5 grid-rows-[repeat(4,minmax(3.75rem,1fr))] gap-2 border-t border-[#2a2a2a] bg-[#121212] p-2"
           role="group"
           aria-label="Amount keypad"
         >
@@ -164,7 +164,12 @@ export function AmountInputModal({
             action={{ kind: "digit", value: "9", label: "9" }}
             onPress={applyAction}
           />
-          <BackspaceButton onBackspace={() => applyAction({ kind: "backspace", label: "Backspace" })} onClear={handleClear} />
+          <BackspaceButton
+            onBackspace={() =>
+              applyAction({ kind: "backspace", label: "Backspace" })
+            }
+            onClear={handleClear}
+          />
 
           <KeypadButton
             action={{ kind: "operator", value: "×", label: "×" }}
@@ -187,7 +192,7 @@ export function AmountInputModal({
             type="button"
             aria-label={pendingOperation ? "Equals" : "Confirm amount"}
             onClick={handleEqualsOrConfirm}
-            className="row-span-3 flex min-h-[11.25rem] items-center justify-center bg-[#e11d48] text-white transition-colors hover:bg-[#be123c] active:bg-[#9f1239]"
+            className="row-span-3 flex min-h-[11.25rem] items-center justify-center rounded-xl border border-[#3a3a3c] bg-[#e11d48] text-white transition-colors hover:bg-[#be123c] active:bg-[#9f1239]"
           >
             {pendingOperation ? (
               <span className="text-[1.75rem] font-medium" aria-hidden="true">
@@ -277,7 +282,7 @@ function KeypadButton({
       onClick={() => onPress(action)}
       aria-label={action.label}
       className={cn(
-        "flex h-full min-h-[3.75rem] items-center justify-center bg-[#1c1c1e] text-[1.35rem] font-medium text-foreground transition-colors hover:bg-[#252528] active:bg-[#2c2c2e]",
+        "flex h-full min-h-[3.75rem] items-center justify-center rounded-xl border border-[#3a3a3c] bg-[#1c1c1e] text-[1.35rem] font-medium text-foreground transition-colors hover:bg-[#252528] active:bg-[#2c2c2e]",
         isOperator && "text-muted-foreground",
         className,
       )}
@@ -334,7 +339,7 @@ function BackspaceButton({
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
       onPointerLeave={handlePointerUp}
-      className="flex h-full min-h-[3.75rem] items-center justify-center bg-[#1c1c1e] text-foreground transition-colors hover:bg-[#252528] active:bg-[#2c2c2e]"
+      className="flex h-full min-h-[3.75rem] items-center justify-center rounded-xl border border-[#3a3a3c] bg-[#1c1c1e] text-foreground transition-colors hover:bg-[#252528] active:bg-[#2c2c2e]"
     >
       <Delete className="size-5" strokeWidth={1.75} aria-hidden="true" />
     </button>

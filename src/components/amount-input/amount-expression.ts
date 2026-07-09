@@ -121,21 +121,23 @@ export function appendDecimal(
 }
 
 export function backspace(state: AmountExpressionState): AmountExpressionState {
+  // Dangling operator (e.g. "5 ×") — remove the operator first.
   if (state.operator && (state.right === "" || state.replaceNext)) {
     return { ...state, operator: null, right: "", replaceNext: false };
   }
 
   const current = currentOperand(state);
 
-  if (state.replaceNext) {
+  // After equals / replaceNext, still delete one digit from the result
+  // instead of wiping the whole value.
+  if (current.length <= 1) {
     return setCurrentOperand({ ...state, replaceNext: false }, "0");
   }
 
-  if (current.length <= 1) {
-    return setCurrentOperand(state, "0");
-  }
-
-  return setCurrentOperand(state, current.slice(0, -1));
+  return setCurrentOperand(
+    { ...state, replaceNext: false },
+    current.slice(0, -1),
+  );
 }
 
 export function setOperator(
