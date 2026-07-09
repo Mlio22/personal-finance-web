@@ -111,6 +111,7 @@ function slugifyName(name: string): string {
 function formValuesToAccountFields(values: AccountFormValues) {
   const isSavingsLike =
     values.type === "savings" || values.type === "investment";
+  const description = values.description.trim() || undefined;
 
   return {
     name: values.name.trim() || "Untitled account",
@@ -119,7 +120,9 @@ function formValuesToAccountFields(values: AccountFormValues) {
     type: values.type,
     color: values.color,
     icon: values.icon,
-    description: values.description.trim() || undefined,
+    description,
+    // Keep list subtitle in sync — mock savings used goalLabel for this text.
+    goalLabel: description,
     creditLimit:
       values.type === "debt" || values.type === "regular"
         ? values.creditLimit
@@ -197,12 +200,17 @@ export function deleteAccountFromMockCache(accountId: string): AccountsResponse 
   return clientMockCache;
 }
 
+/** Subtitle shown under an account — description, or legacy mock goalLabel. */
+export function getAccountDescription(account: Account): string {
+  return (account.description ?? account.goalLabel ?? "").trim();
+}
+
 export function accountToFormValues(account: Account): AccountFormValues {
   return {
     name: account.name,
     type: account.type,
     currency: account.currency,
-    description: account.description ?? "",
+    description: getAccountDescription(account),
     balance: account.balance,
     creditLimit: account.creditLimit ?? 0,
     savingsTarget: account.savingsTarget ?? 0,
