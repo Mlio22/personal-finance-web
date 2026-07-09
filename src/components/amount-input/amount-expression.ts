@@ -23,10 +23,20 @@ export function createAmountExpression(
   };
 }
 
+export function clearExpression(): AmountExpressionState {
+  return {
+    left: "0",
+    operator: null,
+    right: "",
+    replaceNext: true,
+  };
+}
+
 function formatOperand(value: number): string {
   if (!Number.isFinite(value)) return "0";
   if (Number.isInteger(value)) return String(value);
-  return String(Number(value.toFixed(8)).toString());
+  // Trim trailing zeros from decimal results without forcing fixed places.
+  return String(parseFloat(value.toFixed(8)));
 }
 
 export function parseOperand(value: string): number {
@@ -39,7 +49,7 @@ function applyOperator(
   left: number,
   operator: AmountOperator,
   right: number,
-): number {
+): number | null {
   switch (operator) {
     case "+":
       return left + right;
@@ -48,11 +58,12 @@ function applyOperator(
     case "×":
       return left * right;
     case "÷":
-      return right === 0 ? left : left / right;
+      if (right === 0) return null;
+      return left / right;
   }
 }
 
-export function evaluateExpression(state: AmountExpressionState): number {
+export function evaluateExpression(state: AmountExpressionState): number | null {
   const left = parseOperand(state.left);
 
   if (!state.operator) {
@@ -93,7 +104,9 @@ export function appendDigit(
   return setCurrentOperand(state, `${current}${digit}`);
 }
 
-export function appendDecimal(state: AmountExpressionState): AmountExpressionState {
+export function appendDecimal(
+  state: AmountExpressionState,
+): AmountExpressionState {
   const current = currentOperand(state);
 
   if (state.replaceNext) {
@@ -108,8 +121,8 @@ export function appendDecimal(state: AmountExpressionState): AmountExpressionSta
 }
 
 export function backspace(state: AmountExpressionState): AmountExpressionState {
-  if (state.operator && state.right === "" && !state.replaceNext) {
-    return { ...state, operator: null, replaceNext: false };
+  if (state.operator && (state.right === "" || state.replaceNext)) {
+    return { ...state, operator: null, right: "", replaceNext: false };
   }
 
   const current = currentOperand(state);
@@ -129,8 +142,18 @@ export function setOperator(
   state: AmountExpressionState,
   operator: AmountOperator,
 ): AmountExpressionState {
-  if (state.operator && state.right !== "") {
+  // Resolve the previous operation before chaining a new one.
+  if (state.operator && state.right !== "" && state.right !== ".") {
     const result = evaluateExpression(state);
+    if (result === null) {
+      // Divide-by-zero: drop the invalid op and start the new one from left.
+      return {
+        left: state.left || "0",
+        operator,
+        right: "",
+        replaceNext: true,
+      };
+    }
     return {
       left: formatOperand(result),
       operator,
@@ -152,13 +175,38 @@ export function equals(state: AmountExpressionState): AmountExpressionState {
     return { ...state, replaceNext: true };
   }
 
+  // Incomplete expression (e.g. "5 ×") — just drop the dangling operator.
+  if (state.right === "" || state.right === ".") {
+    return {
+      left: state.left || "0",
+      operator: null,
+      right: "",
+      replaceNext: true,
+    };
+  }
+
   const result = evaluateExpression(state);
+
+  // Divide-by-zero: keep the left operand and clear the bad operation.
+  if (result === null) {
+    return {
+      left: state.left || "0",
+      operator: null,
+      right: "",
+      replaceNext: true,
+    };
+  }
+
   return {
     left: formatOperand(result),
     operator: null,
     right: "",
     replaceNext: true,
   };
+}
+
+export function hasPendingOperation(state: AmountExpressionState): boolean {
+  return state.operator !== null;
 }
 
 export function signedAmount(
@@ -169,10 +217,52 @@ export function signedAmount(
   return mode === "credit" ? -magnitude : magnitude;
 }
 
-export function formatAmountDisplay(
-  value: number,
+function formatOperandForDisplay(value: string): string {
+  if (!value || value === ".") return "0";
+
+  const hasTrailingDot = value.endsWith(".");
+  const [rawWhole, rawFraction = ""] = value.split(".");
+  const wholeNumber = Number(rawWhole || "0");
+  const whole = Number.isFinite(wholeNumber)
+    ? new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(
+        wholeNumber,
+      )
+    : rawWhole;
+
+  if (!value.includes(".")) {
+    return whole;
+  }
+
+  if (hasTrailingDot && rawFraction === "") {
+    return `${whole}.`;
+  }
+
+  return `${whole}.${rawFraction}`;
+}
+
+/**
+ * Shows the live expression while an operation is in progress
+ * (e.g. "IDR 5 × 8"), otherwise the resolved amount.
+ */
+export function formatExpressionDisplay(
+  state: AmountExpressionState,
   currency: string,
 ): string {
+  const left = formatOperandForDisplay(state.left || "0");
+
+  if (!state.operator) {
+    return `${currency} ${left}`;
+  }
+
+  if (state.right === "" || state.replaceNext) {
+    return `${currency} ${left} ${state.operator}`;
+  }
+
+  const right = formatOperandForDisplay(state.right);
+  return `${currency} ${left} ${state.operator} ${right}`;
+}
+
+export function formatAmountDisplay(value: number, currency: string): string {
   const absolute = Math.abs(value);
   const hasFraction = !Number.isInteger(absolute);
   const formatter = new Intl.NumberFormat("en-US", {
