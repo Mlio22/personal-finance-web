@@ -39,7 +39,7 @@ export function SavingsAccountRow({
     >
       <div
         className={cn(
-          "grid items-start gap-x-3 gap-y-1",
+          "grid items-start gap-x-3",
           hasGoal
             ? "grid-cols-[auto_minmax(0,1fr)_auto]"
             : "grid-cols-[auto_minmax(0,1fr)]",
@@ -75,18 +75,13 @@ export function SavingsAccountRow({
             <ProgressRing progress={progress} />
           </div>
         ) : null}
-
-        {description ? (
-          <p
-            className={cn(
-              "w-full break-words text-xs leading-relaxed text-muted-foreground",
-              hasGoal ? "col-span-3" : "col-span-2",
-            )}
-          >
-            {description}
-          </p>
-        ) : null}
       </div>
+
+      {description ? (
+        <p className="mt-1.5 w-full break-words text-xs leading-relaxed text-muted-foreground">
+          {description}
+        </p>
+      ) : null}
     </button>
   );
 }

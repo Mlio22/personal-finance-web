@@ -25,7 +25,7 @@ export function AccountRow({ account, onSelect, className }: AccountRowProps) {
         className,
       )}
     >
-      <div className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-3 gap-y-1">
+      <div className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-3">
         <AccountAvatar
           name={account.name}
           color={account.color}
@@ -46,13 +46,13 @@ export function AccountRow({ account, onSelect, className }: AccountRowProps) {
             })}
           </p>
         </div>
-
-        {description ? (
-          <p className="col-span-2 w-full break-words text-xs leading-relaxed text-muted-foreground">
-            {description}
-          </p>
-        ) : null}
       </div>
+
+      {description ? (
+        <p className="mt-1.5 w-full break-words text-xs leading-relaxed text-muted-foreground">
+          {description}
+        </p>
+      ) : null}
     </button>
   );
 }
