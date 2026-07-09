@@ -33,54 +33,44 @@ export function SavingsAccountRow({
       type="button"
       onClick={() => onSelect?.(account)}
       className={cn(
-        "w-full px-1 py-2.5 text-left transition-colors hover:bg-muted/40",
+        "flex w-full items-start gap-3 px-1 py-2.5 text-left transition-colors hover:bg-muted/40",
         className,
       )}
     >
-      <div
-        className={cn(
-          "grid items-start gap-x-3",
-          hasGoal
-            ? "grid-cols-[auto_minmax(0,1fr)_auto]"
-            : "grid-cols-[auto_minmax(0,1fr)]",
-        )}
-      >
-        <AccountAvatar
-          name={account.name}
-          color={account.color}
-          icon={account.icon}
-        />
+      <AccountAvatar
+        name={account.name}
+        color={account.color}
+        icon={account.icon}
+      />
 
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-foreground">{account.name}</p>
-          <p
-            className={cn(
-              "mt-0.5 text-sm tabular-nums",
-              isZero ? "text-muted-foreground" : "text-positive",
-            )}
-          >
-            {formatMoney(account.balance, account.currency, {
-              maximumFractionDigits: 2,
-            })}
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold text-foreground">{account.name}</p>
+        {description ? (
+          <p className="mt-0.5 break-words text-xs leading-relaxed text-muted-foreground">
+            {description}
           </p>
-        </div>
-
-        {hasGoal ? (
-          <div className="flex shrink-0 items-center gap-2.5 self-center">
-            <span className="text-sm font-medium tabular-nums text-foreground">
-              {formatIdr(
-                remaining > 0 ? remaining : (account.savingsTarget ?? 0),
-              )}
-            </span>
-            <ProgressRing progress={progress} />
-          </div>
         ) : null}
+        <p
+          className={cn(
+            "mt-0.5 text-sm tabular-nums",
+            isZero ? "text-muted-foreground" : "text-positive",
+          )}
+        >
+          {formatMoney(account.balance, account.currency, {
+            maximumFractionDigits: 2,
+          })}
+        </p>
       </div>
 
-      {description ? (
-        <p className="mt-1.5 w-full break-words text-xs leading-relaxed text-muted-foreground">
-          {description}
-        </p>
+      {hasGoal ? (
+        <div className="flex shrink-0 items-center gap-2.5 self-center">
+          <span className="text-sm font-medium tabular-nums text-foreground">
+            {formatIdr(
+              remaining > 0 ? remaining : (account.savingsTarget ?? 0),
+            )}
+          </span>
+          <ProgressRing progress={progress} />
+        </div>
       ) : null}
     </button>
   );

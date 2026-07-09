@@ -21,38 +21,35 @@ export function AccountRow({ account, onSelect, className }: AccountRowProps) {
       type="button"
       onClick={() => onSelect?.(account)}
       className={cn(
-        "w-full px-1 py-2.5 text-left transition-colors hover:bg-muted/40",
+        "flex w-full items-start gap-3 px-1 py-2.5 text-left transition-colors hover:bg-muted/40",
         className,
       )}
     >
-      <div className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-3">
-        <AccountAvatar
-          name={account.name}
-          color={account.color}
-          icon={account.icon}
-          showStar={account.isDefault}
-        />
+      <AccountAvatar
+        name={account.name}
+        color={account.color}
+        icon={account.icon}
+        showStar={account.isDefault}
+      />
 
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-foreground">{account.name}</p>
-          <p
-            className={cn(
-              "mt-0.5 text-sm tabular-nums",
-              isZero ? "text-muted-foreground" : "text-positive",
-            )}
-          >
-            {formatMoney(account.balance, account.currency, {
-              maximumFractionDigits: 2,
-            })}
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold text-foreground">{account.name}</p>
+        {description ? (
+          <p className="mt-0.5 break-words text-xs leading-relaxed text-muted-foreground">
+            {description}
           </p>
-        </div>
-      </div>
-
-      {description ? (
-        <p className="mt-1.5 w-full break-words text-xs leading-relaxed text-muted-foreground">
-          {description}
+        ) : null}
+        <p
+          className={cn(
+            "mt-0.5 text-sm tabular-nums",
+            isZero ? "text-muted-foreground" : "text-positive",
+          )}
+        >
+          {formatMoney(account.balance, account.currency, {
+            maximumFractionDigits: 2,
+          })}
         </p>
-      ) : null}
+      </div>
     </button>
   );
 }
