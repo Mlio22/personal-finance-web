@@ -108,16 +108,13 @@ export function appendDecimal(
   state: AmountExpressionState,
 ): AmountExpressionState {
   const current = currentOperand(state);
+  const working = current === "" ? "0" : current;
 
-  if (state.replaceNext) {
-    return setCurrentOperand(state, "0.");
+  if (working.includes(".")) {
+    return { ...state, replaceNext: false };
   }
 
-  if (current.includes(".")) {
-    return state;
-  }
-
-  return setCurrentOperand(state, current === "" ? "0." : `${current}.`);
+  return setCurrentOperand({ ...state, replaceNext: false }, `${working}.`);
 }
 
 export function backspace(state: AmountExpressionState): AmountExpressionState {
