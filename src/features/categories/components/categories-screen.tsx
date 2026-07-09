@@ -6,8 +6,12 @@ import { ExpenseDonutChart } from "@/features/categories/components/expense-donu
 import { useCategoriesSummary } from "@/features/categories/hooks/use-categories-summary";
 import { useOverview } from "@/features/categories/hooks/use-overview";
 import type { CategorySummaryItem } from "@/features/categories/types";
+import { cn } from "@/lib/utils";
 
 const MAIN_GRID_CAPACITY = 12;
+
+// Header (3.5rem) + period selector (~3.25rem) + main padding (2rem) + bottom nav (4.5rem)
+const CATEGORIES_GRID_HEIGHT = "calc(100dvh - 13.75rem)";
 
 function partitionCategories(categories: CategorySummaryItem[]) {
   const main = categories.slice(0, MAIN_GRID_CAPACITY);
@@ -22,10 +26,21 @@ function partitionCategories(categories: CategorySummaryItem[]) {
   };
 }
 
+function getBottomCardPlacement(index: number, total: number) {
+  if (total === 3 && index === 2) {
+    return { gridColumnStart: 3, className: "col-span-2" as const };
+  }
+
+  return { gridColumnStart: index + 1, className: undefined };
+}
+
 function CategoriesSkeleton() {
   return (
     <div className="space-y-3">
-      <div className="grid min-h-[calc(100dvh-12rem)] grid-cols-4 grid-rows-[4fr_2fr_2fr_4fr] gap-2">
+      <div
+        className="grid grid-cols-4 grid-rows-[4fr_2fr_2fr_4fr] gap-1.5"
+        style={{ height: CATEGORIES_GRID_HEIGHT }}
+      >
         {Array.from({ length: 4 }).map((_, index) => (
           <div
             key={`top-${index}`}
@@ -40,7 +55,11 @@ function CategoriesSkeleton() {
         {Array.from({ length: 4 }).map((_, index) => (
           <div
             key={`bottom-${index}`}
-            className="row-start-4 animate-pulse rounded-xl bg-muted/60"
+            className={cn(
+              "row-start-4 animate-pulse rounded-xl bg-muted/60",
+              index === 2 && "col-span-2 col-start-3",
+            )}
+            style={index < 2 ? { gridColumnStart: index + 1 } : undefined}
           />
         ))}
       </div>
@@ -63,7 +82,7 @@ export function CategoriesScreen({
   const isLoading = isSummaryLoading || isOverviewLoading;
   const categories = summaryData?.categories ?? [];
 
-  if (isLoading) {
+  if (isLoading && categories.length === 0) {
     return <CategoriesSkeleton />;
   }
 
@@ -72,7 +91,10 @@ export function CategoriesScreen({
 
   return (
     <div className="space-y-3 pb-2">
-      <div className="grid min-h-[calc(100dvh-12rem)] grid-cols-4 grid-rows-[4fr_2fr_2fr_4fr] gap-2">
+      <div
+        className="grid grid-cols-4 grid-rows-[4fr_2fr_2fr_4fr] gap-1.5"
+        style={{ height: CATEGORIES_GRID_HEIGHT }}
+      >
         {top.map((category, index) => (
           <CategoryCard
             key={category.id}
@@ -93,7 +115,7 @@ export function CategoriesScreen({
           />
         ) : null}
 
-        <div className="col-span-2 row-span-2 col-start-2 row-start-2 flex min-h-0 min-w-0 items-center justify-center p-1">
+        <div className="col-span-2 row-span-2 col-start-2 row-start-2 flex min-h-0 min-w-0 items-center justify-center">
           <ExpenseDonutChart
             categories={categories}
             totalExpenses={overviewData?.expenses ?? 0}
@@ -131,27 +153,31 @@ export function CategoriesScreen({
           />
         ) : null}
 
-        {bottom.map((category, index) => (
-          <CategoryCard
-            key={category.id}
-            category={category}
-            highlighted={selectedCategoryId === category.id}
-            onSelect={setSelectedCategoryId}
-            className="row-start-4"
-            style={{ gridColumnStart: index + 1 }}
-          />
-        ))}
+        {bottom.map((category, index) => {
+          const placement = getBottomCardPlacement(index, bottom.length);
+
+          return (
+            <CategoryCard
+              key={category.id}
+              category={category}
+              highlighted={selectedCategoryId === category.id}
+              onSelect={setSelectedCategoryId}
+              className={cn("row-start-4", placement.className)}
+              style={{ gridColumnStart: placement.gridColumnStart }}
+            />
+          );
+        })}
       </div>
 
       {overflow.length > 0 ? (
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-4 gap-1.5">
           {overflow.map((category) => (
             <CategoryCard
               key={category.id}
               category={category}
               highlighted={selectedCategoryId === category.id}
               onSelect={setSelectedCategoryId}
-              className="min-h-28"
+              className="min-h-24"
             />
           ))}
         </div>

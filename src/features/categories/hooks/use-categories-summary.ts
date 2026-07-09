@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { getCategoriesSummary } from "@/features/categories/api/get-categories-summary";
+import { MOCK_CATEGORIES_SUMMARY } from "@/features/categories/data/mock-categories-data";
 import { useAccountFilter } from "@/features/accounts/context/account-filter-provider";
 import { usePeriod } from "@/features/period/context/period-provider";
 
@@ -24,5 +25,6 @@ export function useCategoriesSummary() {
         range,
         accountId: selectedAccountId,
       }),
+    placeholderData: MOCK_CATEGORIES_SUMMARY,
   });
 }

@@ -51,7 +51,7 @@ export function CategoryCard({
       href={`/transactions?categoryId=${category.id}`}
       onClick={() => onSelect?.(category.id)}
       className={cn(
-        "flex h-full min-h-0 min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-1 py-2 text-center transition-colors hover:bg-muted/40",
+        "flex h-full min-h-0 min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-0.5 py-1 text-center transition-colors hover:bg-muted/40",
         highlighted && "bg-muted/60 ring-1 ring-border/70",
         className,
       )}
