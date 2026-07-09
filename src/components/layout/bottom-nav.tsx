@@ -11,7 +11,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Main navigation"
-      className="sticky bottom-0 z-50 border-t border-border/60 bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur supports-[backdrop-filter]:bg-background/80"
+      className="sticky bottom-0 z-50 border-t border-border/40 bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur supports-[backdrop-filter]:bg-background/80"
     >
       <div className="mx-auto flex h-[4.5rem] max-w-lg items-center justify-around px-2">
         {MAIN_TABS.map((tab) => {
@@ -24,14 +24,21 @@ export function BottomNav() {
               key={tab.id}
               href={tab.href}
               className={cn(
-                "flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-full px-2 py-2 text-[0.7rem] font-medium transition-colors",
+                "flex min-w-0 flex-1 flex-col items-center justify-center gap-1 px-1 py-2 text-[0.65rem] font-medium transition-colors",
                 isActive
-                  ? "bg-nav-active text-foreground"
+                  ? "text-foreground"
                   : "text-muted-foreground hover:text-foreground",
               )}
               aria-current={isActive ? "page" : undefined}
             >
-              <Icon className="size-5 shrink-0" aria-hidden="true" />
+              <span
+                className={cn(
+                  "flex items-center justify-center rounded-full px-3 py-1.5 transition-colors",
+                  isActive && "bg-nav-active",
+                )}
+              >
+                <Icon className="size-5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+              </span>
               <span className="truncate">{tab.label}</span>
             </Link>
           );

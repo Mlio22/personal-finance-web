@@ -36,11 +36,13 @@ export function AccountFilterSheet() {
           variant="ghost"
           className="h-auto min-w-0 flex-1 flex-col items-center gap-0.5 px-2 py-1 hover:bg-transparent"
         >
-          <span className="flex items-center gap-1 text-sm font-medium text-foreground">
+          <span className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
             {displayLabel}
-            <ChevronDown className="size-4 text-muted-foreground" aria-hidden="true" />
+            <ChevronDown className="size-3.5" aria-hidden="true" />
           </span>
-          <span className="text-xs text-positive">{formatIdr(displayBalance)}</span>
+          <span className="text-lg font-bold tabular-nums tracking-tight text-foreground">
+            {formatIdr(displayBalance)}
+          </span>
         </Button>
       </DrawerTrigger>
 
@@ -96,31 +98,33 @@ function AccountFilterOption({
           selected && "bg-muted",
         )}
       >
-      {color ? (
-        <span
-          className="flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white"
-          style={{ backgroundColor: color }}
-          aria-hidden="true"
-        >
-          {name.charAt(0)}
-        </span>
-      ) : (
-        <span
-          className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-semibold text-foreground"
-          aria-hidden="true"
-        >
-          A
-        </span>
-      )}
+        {color ? (
+          <span
+            className="flex size-10 shrink-0 items-center justify-center rounded-xl text-sm font-semibold text-white"
+            style={{ backgroundColor: color }}
+            aria-hidden="true"
+          >
+            {name.charAt(0)}
+          </span>
+        ) : (
+          <span
+            className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted text-sm font-semibold text-foreground"
+            aria-hidden="true"
+          >
+            A
+          </span>
+        )}
 
-      <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-medium">{name}</span>
-        <span className="block text-xs text-positive">{formatIdr(balance)}</span>
-      </span>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-sm font-semibold">{name}</span>
+          <span className="block text-sm tabular-nums text-positive">
+            {formatIdr(balance)}
+          </span>
+        </span>
 
-      {selected ? (
-        <Check className="size-4 shrink-0 text-positive" aria-hidden="true" />
-      ) : null}
+        {selected ? (
+          <Check className="size-4 shrink-0 text-positive" aria-hidden="true" />
+        ) : null}
       </button>
     </DrawerClose>
   );

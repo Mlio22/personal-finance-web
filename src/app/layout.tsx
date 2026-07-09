@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist_Mono, Poppins } from "next/font/google";
 import { SerwistProvider } from "@/components/pwa/serwist-provider";
 import { QueryProvider } from "@/providers/query-provider";
 import {
@@ -10,9 +10,10 @@ import {
 } from "@/lib/pwa/constants";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const poppins = Poppins({
+  variable: "--font-poppins",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
 const geistMono = Geist_Mono({
@@ -71,9 +72,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} dark h-full antialiased`}
+      className={`${poppins.variable} ${geistMono.variable} dark h-full antialiased`}
     >
-      <body className="min-h-full bg-background text-foreground">
+      <body className="min-h-full bg-background font-sans text-foreground">
         <SerwistProvider swUrl="/sw.js">
           <QueryProvider>{children}</QueryProvider>
         </SerwistProvider>
