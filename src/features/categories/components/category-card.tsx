@@ -8,8 +8,11 @@ import type { CategorySummaryItem } from "@/features/categories/types";
 import { formatIdr } from "@/lib/format-currency";
 import { cn } from "@/lib/utils";
 
+type CategoryCardDensity = "edge" | "flank";
+
 interface CategoryCardProps {
   category: CategorySummaryItem;
+  density?: CategoryCardDensity;
   highlighted?: boolean;
   onSelect?: (categoryId: string) => void;
   className?: string;
@@ -38,6 +41,7 @@ function formatCompactIdr(amount: number): string {
 
 export function CategoryCard({
   category,
+  density = "flank",
   highlighted = false,
   onSelect,
   className,
@@ -45,27 +49,37 @@ export function CategoryCard({
 }: CategoryCardProps) {
   const { displayAmount, isOverBudget, showHighlight } =
     getCategoryRemainingDisplay(category.budgetedAmount, category.spentAmount);
+  const isEdge = density === "edge";
 
   return (
     <Link
       href={`/transactions?categoryId=${category.id}`}
       onClick={() => onSelect?.(category.id)}
       className={cn(
-        "flex h-full min-h-0 min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-0.5 py-1 text-center transition-colors hover:bg-muted/40",
+        "flex min-w-0 flex-col items-center rounded-xl text-center transition-colors hover:bg-muted/40",
+        isEdge
+          ? "gap-1.5 px-1 py-2"
+          : "h-full justify-center gap-2 px-1.5 py-3",
         highlighted && "bg-muted/60 ring-1 ring-border/70",
         className,
       )}
       style={style}
       aria-label={`${category.name}, remaining ${formatIdr(displayAmount)}, spent ${formatIdr(category.spentAmount)}`}
     >
-      <span className="line-clamp-1 w-full text-[11px] font-semibold leading-tight text-foreground">
+      <span
+        className={cn(
+          "line-clamp-1 w-full font-semibold leading-tight text-foreground",
+          isEdge ? "text-[10px]" : "text-[11px]",
+        )}
+      >
         {category.name}
       </span>
 
       {showHighlight ? (
         <span
           className={cn(
-            "max-w-full truncate rounded-md px-1.5 py-0.5 text-[10px] font-semibold tabular-nums leading-none text-background",
+            "max-w-full truncate rounded-full px-2 py-0.5 font-semibold tabular-nums leading-none text-background",
+            isEdge ? "text-[9px]" : "text-[10px]",
             isOverBudget && "text-white",
           )}
           style={{ backgroundColor: category.color }}
@@ -73,7 +87,12 @@ export function CategoryCard({
           {formatCompactIdr(displayAmount)}
         </span>
       ) : (
-        <span className="text-[10px] font-medium tabular-nums leading-none text-muted-foreground">
+        <span
+          className={cn(
+            "font-medium tabular-nums leading-none text-muted-foreground",
+            isEdge ? "text-[9px]" : "text-[10px]",
+          )}
+        >
           {formatCompactIdr(displayAmount)}
         </span>
       )}
@@ -81,12 +100,16 @@ export function CategoryCard({
       <CategoryIcon
         icon={category.icon}
         color={category.color}
-        className="flex size-9 shrink-0 items-center justify-center rounded-xl"
+        className={cn(
+          "flex shrink-0 items-center justify-center rounded-xl",
+          isEdge ? "size-8" : "size-10",
+        )}
       />
 
       <span
         className={cn(
-          "max-w-full truncate text-[10px] font-semibold tabular-nums leading-none",
+          "max-w-full truncate font-semibold tabular-nums leading-none",
+          isEdge ? "text-[9px]" : "text-[10px]",
           category.spentAmount > 0 || isOverBudget
             ? undefined
             : "text-muted-foreground",

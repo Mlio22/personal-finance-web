@@ -22,9 +22,9 @@ interface ExpenseDonutChartProps {
   className?: string;
 }
 
-const CHART_SIZE = 220;
-const OUTER_RADIUS = 100;
-const INNER_RADIUS = 68;
+const CHART_SIZE = 240;
+const OUTER_RADIUS = 112;
+const INNER_RADIUS = 72;
 const CENTER = CHART_SIZE / 2;
 
 function polarToCartesian(
@@ -127,7 +127,7 @@ export function ExpenseDonutChart({
       )}
     >
       <svg
-        className="size-full max-h-full max-w-full"
+        className="aspect-square h-full w-full max-h-full max-w-full"
         viewBox={`0 0 ${CHART_SIZE} ${CHART_SIZE}`}
         preserveAspectRatio="xMidYMid meet"
         role="img"
@@ -170,11 +170,11 @@ export function ExpenseDonutChart({
         )}
       </svg>
 
-      <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-3 text-center">
-        <span className="text-xs font-medium text-muted-foreground">
+      <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-2 text-center">
+        <span className="text-[11px] font-medium text-muted-foreground">
           Expenses
         </span>
-        <span className="mt-0.5 text-base font-semibold tabular-nums text-expense sm:text-lg">
+        <span className="mt-1 text-lg font-semibold tabular-nums text-expense">
           {formatIdr(totalExpenses)}
         </span>
         <span className="mt-0.5 text-sm font-medium tabular-nums text-income">
