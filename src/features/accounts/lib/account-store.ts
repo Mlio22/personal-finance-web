@@ -231,8 +231,16 @@ export function defaultFormValues(
         ? "#EC4899"
         : type === "debt"
           ? "#F97316"
-          : "#3B82F6",
+          : type === "investment"
+            ? "#10B981"
+            : "#3B82F6",
     icon:
-      type === "savings" ? "vault" : type === "debt" ? "cash" : "card",
+      type === "savings"
+        ? "vault"
+        : type === "debt"
+          ? "cash"
+          : type === "investment"
+            ? "chart"
+            : "card",
   };
 }

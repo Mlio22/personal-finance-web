@@ -47,7 +47,7 @@ export type AccountFormMode = "create" | "edit";
 
 export type NewAccountTypeOption = Extract<
   AccountType,
-  "regular" | "debt" | "savings"
+  "regular" | "debt" | "savings" | "investment"
 >;
 
 export interface AccountFormValues {
