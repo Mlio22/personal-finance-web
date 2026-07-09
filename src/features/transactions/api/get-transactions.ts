@@ -1,3 +1,4 @@
+import { getAccountBalanceFromMock } from "@/features/accounts/lib/account-store";
 import { buildMockTransactionsResponse } from "@/features/transactions/data/mock-transactions";
 import type { TransactionsResponse } from "@/features/transactions/types";
 import { apiClient } from "@/lib/api-client";
@@ -35,6 +36,7 @@ export async function getTransactions(
       periodEnd: params.range.end ?? undefined,
       accountId: params.accountId,
       categoryId: params.categoryId,
+      endingBalance: getAccountBalanceFromMock(params.accountId),
     });
   }
 }

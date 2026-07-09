@@ -1,12 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import { useRouter } from "next/navigation";
 import { ChevronDown } from "lucide-react";
-import type { Account, AccountsSubTab } from "@/features/accounts/types";
+import type {
+  Account,
+  AccountsSubTab,
+  NewAccountTypeOption,
+} from "@/features/accounts/types";
 import { AccountSection } from "@/features/accounts/components/account-section";
 import { AccountRow } from "@/features/accounts/components/account-row";
 import { AccountsSubNav } from "@/features/accounts/components/accounts-sub-nav";
+import { AddAccountTypeDrawer } from "@/features/accounts/components/add-account-type-drawer";
 import { useAccounts } from "@/features/accounts/hooks/use-accounts";
+import { useRegisterHeaderAction } from "@/components/layout/header-action-provider";
 import { cn } from "@/lib/utils";
 
 function AccountsLoadingSkeleton() {
@@ -91,66 +98,90 @@ function ArchiveSection({
   );
 }
 
-function handleAccountSelect() {
-  // Stub for account detail/edit — tracked as follow-up.
-}
-
 export function AccountsScreen() {
+  const router = useRouter();
   const [activeSubTab, setActiveSubTab] = useState<AccountsSubTab>("accounts");
+  const [addTypeOpen, setAddTypeOpen] = useState(false);
   const { data, isLoading, isUsingFallback } = useAccounts();
 
+  const openAddAccount = useCallback(() => setAddTypeOpen(true), []);
+  useRegisterHeaderAction("accounts", openAddAccount);
+
+  const handleAccountSelect = useCallback(
+    (account: Account) => {
+      router.push(`/accounts/${account.id}/edit`);
+    },
+    [router],
+  );
+
+  const handleSelectType = useCallback(
+    (type: NewAccountTypeOption) => {
+      setAddTypeOpen(false);
+      router.push(`/accounts/new?type=${type}`);
+    },
+    [router],
+  );
+
   return (
-    <div>
-      <AccountsSubNav activeTab={activeSubTab} onTabChange={setActiveSubTab} />
+    <>
+      <div>
+        <AccountsSubNav activeTab={activeSubTab} onTabChange={setActiveSubTab} />
 
-      {activeSubTab === "debts" ? (
-        <ComingSoonPanel title="Debts" />
-      ) : activeSubTab === "my-finances" ? (
-        <ComingSoonPanel title="My finances" />
-      ) : isLoading && !data ? (
-        <AccountsLoadingSkeleton />
-      ) : data ? (
-        <div className="space-y-5">
-          {isUsingFallback ? (
-            <p className="rounded-xl bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
-              Showing cached account data. Connect the API to load live balances.
-            </p>
-          ) : null}
+        {activeSubTab === "debts" ? (
+          <ComingSoonPanel title="Debts" />
+        ) : activeSubTab === "my-finances" ? (
+          <ComingSoonPanel title="My finances" />
+        ) : isLoading && !data ? (
+          <AccountsLoadingSkeleton />
+        ) : data ? (
+          <div className="space-y-5">
+            {isUsingFallback ? (
+              <p className="rounded-xl bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+                Showing cached account data. Connect the API to load live balances.
+              </p>
+            ) : null}
 
-          <AccountSection
-            title="Accounts"
-            subtotal={data.totals.accounts}
-            accounts={data.accounts}
-            variant="regular"
-            onAccountSelect={handleAccountSelect}
-          />
+            <AccountSection
+              title="Accounts"
+              subtotal={data.totals.accounts}
+              accounts={data.accounts}
+              variant="regular"
+              onAccountSelect={handleAccountSelect}
+            />
 
-          <AccountSection
-            title="Savings"
-            subtotal={data.totals.savings}
-            accounts={data.savings}
-            variant="savings"
-            onAccountSelect={handleAccountSelect}
-            subtotalDecimals={2}
-          />
+            <AccountSection
+              title="Savings"
+              subtotal={data.totals.savings}
+              accounts={data.savings}
+              variant="savings"
+              onAccountSelect={handleAccountSelect}
+              subtotalDecimals={2}
+            />
 
-          <AccountSection
-            title="Investments"
-            subtotal={data.totals.investments}
-            accounts={data.investments}
-            variant="investment"
-            onAccountSelect={handleAccountSelect}
-            subtotalDecimals={2}
-          />
+            <AccountSection
+              title="Investments"
+              subtotal={data.totals.investments}
+              accounts={data.investments}
+              variant="investment"
+              onAccountSelect={handleAccountSelect}
+              subtotalDecimals={2}
+            />
 
-          <ArchiveSection
-            accounts={data.archived}
-            onAccountSelect={handleAccountSelect}
-          />
-        </div>
-      ) : (
-        <ComingSoonPanel title="Accounts unavailable" />
-      )}
-    </div>
+            <ArchiveSection
+              accounts={data.archived}
+              onAccountSelect={handleAccountSelect}
+            />
+          </div>
+        ) : (
+          <ComingSoonPanel title="Accounts unavailable" />
+        )}
+      </div>
+
+      <AddAccountTypeDrawer
+        open={addTypeOpen}
+        onOpenChange={setAddTypeOpen}
+        onSelectType={handleSelectType}
+      />
+    </>
   );
 }

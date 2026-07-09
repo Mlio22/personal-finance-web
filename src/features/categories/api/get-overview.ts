@@ -1,3 +1,4 @@
+import { getAccountBalanceFromMock } from "@/features/accounts/lib/account-store";
 import { MOCK_OVERVIEW } from "@/features/categories/data/mock-overview-data";
 import type { OverviewResponse } from "@/features/categories/types";
 import { apiClient } from "@/lib/api-client";
@@ -9,6 +10,15 @@ export interface OverviewParams {
   accountId?: string;
 }
 
+function buildMockOverview(accountId?: string): OverviewResponse {
+  const connectedBalance = getAccountBalanceFromMock(accountId);
+
+  return {
+    ...MOCK_OVERVIEW,
+    balance: connectedBalance ?? MOCK_OVERVIEW.balance,
+  };
+}
+
 export async function getOverview({
   range,
   accountId,
@@ -18,6 +28,6 @@ export async function getOverview({
       `/v1/overview${buildPeriodQueryString(range, accountId)}`,
     );
   } catch {
-    return MOCK_OVERVIEW;
+    return buildMockOverview(accountId);
   }
 }

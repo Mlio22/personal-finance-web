@@ -178,6 +178,7 @@ export function buildMockTransactionsResponse(options?: {
   periodEnd?: Date;
   accountId?: string;
   categoryId?: string;
+  endingBalance?: number | null;
 }): TransactionsResponse {
   let filtered = [...MOCK_TRANSACTIONS];
 
@@ -195,9 +196,21 @@ export function buildMockTransactionsResponse(options?: {
     filtered = filtered.filter((tx) => tx.categoryId === options.categoryId);
   }
 
+  const periodExpenseTotal = filtered
+    .filter((item) => item.type === "expense")
+    .reduce((sum, item) => sum + Math.abs(item.amount), 0);
+  const periodIncomeTotal = filtered
+    .filter((item) => item.type === "income")
+    .reduce((sum, item) => sum + Math.abs(item.amount), 0);
+
+  const endingBalance =
+    options?.endingBalance ?? MOCK_TRANSACTIONS_RESPONSE.endingBalance;
+  const startingBalance =
+    endingBalance - periodIncomeTotal + periodExpenseTotal;
+
   return {
-    startingBalance: MOCK_TRANSACTIONS_RESPONSE.startingBalance,
-    endingBalance: MOCK_TRANSACTIONS_RESPONSE.endingBalance,
+    startingBalance,
+    endingBalance,
     groups: groupTransactions(filtered),
   };
 }

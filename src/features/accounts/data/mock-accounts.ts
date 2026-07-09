@@ -25,6 +25,9 @@ function sumIdrBalances(accounts: Account[]): number {
     if (account.currency !== "IDR") {
       return sum;
     }
+    if (account.includeInTotalBalance === false) {
+      return sum;
+    }
     return sum + account.balance;
   }, 0);
 }
@@ -319,25 +322,6 @@ export function createMockAccountsResponse(): AccountsResponse {
       investments: sumIdrBalances(investments),
     },
   };
-}
-
-let clientMockCache: AccountsResponse | null = null;
-
-/**
- * Returns a single randomized mock dataset for the current browser session.
- * Safe to call from multiple hooks — amounts stay consistent across the UI.
- * On the server, returns an empty shell to avoid hydration mismatches.
- */
-export function getClientMockAccountsResponse(): AccountsResponse {
-  if (typeof window === "undefined") {
-    return EMPTY_ACCOUNTS_RESPONSE;
-  }
-
-  if (!clientMockCache) {
-    clientMockCache = createMockAccountsResponse();
-  }
-
-  return clientMockCache;
 }
 
 export const ALL_ACCOUNTS_FILTER_ID = "all";

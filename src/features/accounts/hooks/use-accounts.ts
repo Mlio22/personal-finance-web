@@ -3,10 +3,8 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getAccounts } from "@/features/accounts/api/get-accounts";
-import {
-  EMPTY_ACCOUNTS_RESPONSE,
-  getClientMockAccountsResponse,
-} from "@/features/accounts/data/mock-accounts";
+import { EMPTY_ACCOUNTS_RESPONSE } from "@/features/accounts/data/mock-accounts";
+import { getClientMockAccountsResponse } from "@/features/accounts/lib/account-store";
 import type { AccountsResponse } from "@/features/accounts/types";
 
 export function useAccounts() {
@@ -24,7 +22,10 @@ export function useAccounts() {
     placeholderData: mockData ?? undefined,
   });
 
-  const data = query.data ?? mockData ?? undefined;
+  // Prefer live API data; fall back to the shared session mock cache.
+  const data = query.isError
+    ? (mockData ?? undefined)
+    : (query.data ?? mockData ?? undefined);
 
   return {
     ...query,
@@ -32,5 +33,6 @@ export function useAccounts() {
     isLoading: (query.isLoading && !data) || mockData === null,
     isUsingFallback: query.isError,
     fallback: mockData ?? EMPTY_ACCOUNTS_RESPONSE,
+    refreshMockData: () => setMockData(getClientMockAccountsResponse()),
   };
 }
