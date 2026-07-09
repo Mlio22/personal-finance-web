@@ -200,6 +200,31 @@ export function deleteAccountFromMockCache(accountId: string): AccountsResponse 
   return clientMockCache;
 }
 
+/** Marks one account as default (star). Pass the same id again to clear. */
+export function setDefaultAccountInMockCache(
+  accountId: string,
+): AccountsResponse {
+  const current = getClientMockAccountsResponse();
+  const currentlyDefault = findAccountById(current, accountId)?.isDefault;
+
+  function mapAccount(account: Account): Account {
+    if (account.id === accountId) {
+      return { ...account, isDefault: !currentlyDefault };
+    }
+    return { ...account, isDefault: false };
+  }
+
+  clientMockCache = recomputeTotals({
+    accounts: current.accounts.map(mapAccount),
+    savings: current.savings.map(mapAccount),
+    investments: current.investments.map(mapAccount),
+    archived: current.archived.map(mapAccount),
+    totals: current.totals,
+  });
+
+  return clientMockCache;
+}
+
 /** Subtitle shown under an account — description, or legacy mock goalLabel. */
 export function getAccountDescription(account: Account): string {
   return (account.description ?? account.goalLabel ?? "").trim();

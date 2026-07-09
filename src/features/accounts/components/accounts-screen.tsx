@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { ChevronDown } from "lucide-react";
 import type {
   Account,
@@ -12,7 +13,12 @@ import { AccountSection } from "@/features/accounts/components/account-section";
 import { AccountRow } from "@/features/accounts/components/account-row";
 import { AccountsSubNav } from "@/features/accounts/components/accounts-sub-nav";
 import { AddAccountTypeDrawer } from "@/features/accounts/components/add-account-type-drawer";
+import { AccountDetailDrawer } from "@/features/accounts/components/account-detail-drawer";
 import { useAccounts } from "@/features/accounts/hooks/use-accounts";
+import {
+  findAccountById,
+  setDefaultAccountInMockCache,
+} from "@/features/accounts/lib/account-store";
 import { useRegisterHeaderAction } from "@/components/layout/header-action-provider";
 import { cn } from "@/lib/utils";
 
@@ -100,18 +106,46 @@ function ArchiveSection({
 
 export function AccountsScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [activeSubTab, setActiveSubTab] = useState<AccountsSubTab>("accounts");
   const [addTypeOpen, setAddTypeOpen] = useState(false);
+  const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
   const { data, isLoading, isUsingFallback } = useAccounts();
 
   const openAddAccount = useCallback(() => setAddTypeOpen(true), []);
   useRegisterHeaderAction("accounts", openAddAccount);
 
-  const handleAccountSelect = useCallback(
+  const syncAccountsQuery = useCallback(
+    (next: ReturnType<typeof setDefaultAccountInMockCache>) => {
+      queryClient.setQueryData(["accounts"], {
+        data: next,
+        isUsingFallback: true,
+      });
+    },
+    [queryClient],
+  );
+
+  const handleAccountSelect = useCallback((account: Account) => {
+    setSelectedAccount(account);
+    setDetailOpen(true);
+  }, []);
+
+  const handleEditAccount = useCallback(
     (account: Account) => {
       router.push(`/accounts/${account.id}/edit`);
     },
     [router],
+  );
+
+  const handleToggleDefault = useCallback(
+    (account: Account) => {
+      const next = setDefaultAccountInMockCache(account.id);
+      syncAccountsQuery(next);
+      const updated = findAccountById(next, account.id) ?? null;
+      setSelectedAccount(updated);
+    },
+    [syncAccountsQuery],
   );
 
   const handleSelectType = useCallback(
@@ -121,6 +155,13 @@ export function AccountsScreen() {
     },
     [router],
   );
+
+  const handleDetailOpenChange = useCallback((open: boolean) => {
+    setDetailOpen(open);
+    if (!open) {
+      setSelectedAccount(null);
+    }
+  }, []);
 
   return (
     <>
@@ -181,6 +222,14 @@ export function AccountsScreen() {
         open={addTypeOpen}
         onOpenChange={setAddTypeOpen}
         onSelectType={handleSelectType}
+      />
+
+      <AccountDetailDrawer
+        account={selectedAccount}
+        open={detailOpen}
+        onOpenChange={handleDetailOpenChange}
+        onEdit={handleEditAccount}
+        onToggleDefault={handleToggleDefault}
       />
     </>
   );
