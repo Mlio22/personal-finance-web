@@ -6,12 +6,7 @@ export const metadata: Metadata = {
   title: "New account",
 };
 
-const VALID_TYPES = new Set<AccountType>([
-  "regular",
-  "debt",
-  "savings",
-  "investment",
-]);
+const VALID_TYPES = new Set<AccountType>(["regular", "debt", "savings"]);
 
 export default async function NewAccountPage({
   searchParams,
@@ -20,9 +15,12 @@ export default async function NewAccountPage({
 }) {
   const params = await searchParams;
   const typeParam = params.type;
+  // Treat legacy ?type=investment as savings for now.
+  const normalizedType =
+    typeParam === "investment" ? "savings" : (typeParam as AccountType | undefined);
   const initialType =
-    typeParam && VALID_TYPES.has(typeParam as AccountType)
-      ? (typeParam as AccountType)
+    normalizedType && VALID_TYPES.has(normalizedType)
+      ? normalizedType
       : "regular";
 
   return <AccountFormPage mode="create" initialType={initialType} />;

@@ -130,6 +130,7 @@ const SAVINGS_ACTIONS: AccountAction[] = [
 function isSavingsDetail(account: Account): boolean {
   return (
     account.type === "savings" ||
+    account.type === "investment" ||
     Boolean(account.isSavingsGoal && account.savingsTarget)
   );
 }

@@ -39,12 +39,7 @@ import {
 } from "@/components/ui/drawer";
 import { cn } from "@/lib/utils";
 
-const FORM_TYPE_OPTIONS: AccountType[] = [
-  "regular",
-  "debt",
-  "savings",
-  "investment",
-];
+const FORM_TYPE_OPTIONS: AccountType[] = ["regular", "debt", "savings"];
 
 const TYPE_ROW_ICONS: Record<AccountType, LucideIcon> = {
   regular: Wallet,
@@ -78,8 +73,7 @@ export function AccountFormScreen({
 
   const title = mode === "edit" ? "Edit account" : "New account";
   const canSubmit = values.name.trim().length > 0;
-  const isSavingsLike =
-    values.type === "savings" || values.type === "investment";
+  const isSavingsLike = values.type === "savings";
   const secondaryLabel = isSavingsLike ? "Goal" : "Credit limit";
   const secondaryValue = isSavingsLike
     ? values.savingsTarget

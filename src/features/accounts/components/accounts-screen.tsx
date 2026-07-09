@@ -199,15 +199,6 @@ export function AccountsScreen() {
               subtotalDecimals={2}
             />
 
-            <AccountSection
-              title="Investments"
-              subtotal={data.totals.investments}
-              accounts={data.investments}
-              variant="investment"
-              onAccountSelect={handleAccountSelect}
-              subtotalDecimals={2}
-            />
-
             <ArchiveSection
               accounts={data.archived}
               onAccountSelect={handleAccountSelect}

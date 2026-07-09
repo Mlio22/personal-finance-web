@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  ChartLine,
   HandCoins,
   PiggyBank,
   Wallet,
@@ -49,14 +48,6 @@ const ACCOUNT_TYPE_OPTIONS: AccountTypeOption[] = [
     icon: PiggyBank,
     iconClassName: "text-yellow-800",
     iconBgClassName: "bg-gradient-to-br from-yellow-100 to-amber-200",
-  },
-  {
-    type: "investment",
-    title: "Investment",
-    subtitle: "Stocks, funds, ...",
-    icon: ChartLine,
-    iconClassName: "text-emerald-800",
-    iconBgClassName: "bg-gradient-to-br from-emerald-100 to-teal-200",
   },
 ];
 

@@ -38,7 +38,8 @@ export function AccountSection({
       <div>
         {accounts.map((account) =>
           variant === "savings" ||
-          (variant === "investment" && account.isSavingsGoal) ? (
+          variant === "investment" ||
+          account.isSavingsGoal ? (
             <SavingsAccountRow
               key={account.id}
               account={account}

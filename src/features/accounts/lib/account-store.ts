@@ -34,15 +34,18 @@ function recomputeTotals(response: AccountsResponse): AccountsResponse {
   };
 }
 
+function normalizeAccountType(type: AccountType): AccountType {
+  // Investment is folded into savings for now.
+  return type === "investment" ? "savings" : type;
+}
+
 function listKeyForType(type: AccountType): keyof AccountsResponse | null {
-  switch (type) {
+  switch (normalizeAccountType(type)) {
     case "regular":
     case "debt":
       return "accounts";
     case "savings":
       return "savings";
-    case "investment":
-      return "investments";
     default:
       return null;
   }
@@ -109,24 +112,22 @@ function slugifyName(name: string): string {
 }
 
 function formValuesToAccountFields(values: AccountFormValues) {
-  const isSavingsLike =
-    values.type === "savings" || values.type === "investment";
+  const type = normalizeAccountType(values.type);
+  const isSavingsLike = type === "savings";
   const description = values.description.trim() || undefined;
 
   return {
     name: values.name.trim() || "Untitled account",
     balance: values.balance,
     currency: values.currency,
-    type: values.type,
+    type,
     color: values.color,
     icon: values.icon,
     description,
     // Keep list subtitle in sync — mock savings used goalLabel for this text.
     goalLabel: description,
     creditLimit:
-      values.type === "debt" || values.type === "regular"
-        ? values.creditLimit
-        : undefined,
+      type === "debt" || type === "regular" ? values.creditLimit : undefined,
     includeInTotalBalance: values.includeInTotalBalance,
     archived: values.archived,
     isSavingsGoal: isSavingsLike ? values.savingsTarget > 0 : undefined,
@@ -233,7 +234,7 @@ export function getAccountDescription(account: Account): string {
 export function accountToFormValues(account: Account): AccountFormValues {
   return {
     name: account.name,
-    type: account.type,
+    type: normalizeAccountType(account.type),
     currency: account.currency,
     description: getAccountDescription(account),
     balance: account.balance,
@@ -249,9 +250,11 @@ export function accountToFormValues(account: Account): AccountFormValues {
 export function defaultFormValues(
   type: AccountType = "regular",
 ): AccountFormValues {
+  const normalized = normalizeAccountType(type);
+
   return {
     name: "",
-    type,
+    type: normalized,
     currency: "IDR",
     description: "",
     balance: 0,
@@ -260,20 +263,16 @@ export function defaultFormValues(
     includeInTotalBalance: true,
     archived: false,
     color:
-      type === "savings"
+      normalized === "savings"
         ? "#EC4899"
-        : type === "debt"
+        : normalized === "debt"
           ? "#F97316"
-          : type === "investment"
-            ? "#10B981"
-            : "#3B82F6",
+          : "#3B82F6",
     icon:
-      type === "savings"
+      normalized === "savings"
         ? "vault"
-        : type === "debt"
+        : normalized === "debt"
           ? "cash"
-          : type === "investment"
-            ? "chart"
-            : "card",
+          : "card",
   };
 }

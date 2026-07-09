@@ -177,7 +177,8 @@ function createMockSavings(): Account[] {
   ];
 }
 
-function createMockInvestments(): Account[] {
+/** Former investment accounts — treated as savings for now. */
+function createMockInvestmentAsSavings(): Account[] {
   const obligasiTarget = randomIdr(5_000_000, 20_000_000, 100_000);
   const obligasiBalance = randomIdr(
     Math.floor(obligasiTarget * 0.05),
@@ -191,102 +192,102 @@ function createMockInvestments(): Account[] {
       name: "Investasi bibit (cash / RDN)",
       balance: randomIdr(5_000, 500_000, 1),
       currency: "IDR",
-      type: "investment",
+      type: "savings",
       color: "#10B981",
       icon: "cash",
-      sortOrder: 1,
+      sortOrder: 101,
     },
     {
       id: "bibit-pasar-uang",
       name: "Akumulasi bibit pasar uang (darurat)",
       balance: randomIdr(1_000_000, 25_000_000, 1),
       currency: "IDR",
-      type: "investment",
+      type: "savings",
       color: "#10B981",
       icon: "sparkle",
-      sortOrder: 2,
+      sortOrder: 102,
     },
     {
       id: "bibit-obligasi",
       name: "Akumulasi bibit obligasi",
       balance: obligasiBalance,
       currency: "IDR",
-      type: "investment",
+      type: "savings",
       color: "#10B981",
       icon: "vault",
       isSavingsGoal: true,
       savingsTarget: obligasiTarget,
-      sortOrder: 3,
+      sortOrder: 103,
     },
     {
       id: "bibit-saham",
       name: "Akumulasi Investasi bibit saham",
       balance: randomIdr(100_000, 5_000_000, 1),
       currency: "IDR",
-      type: "investment",
+      type: "savings",
       color: "#10B981",
       icon: "chart",
-      sortOrder: 4,
+      sortOrder: 104,
     },
     {
       id: "net-bibit",
       name: "NET Bibit",
       balance: maybeZero(0.6) ? 0 : randomIdr(10_000, 1_000_000, 1),
       currency: "IDR",
-      type: "investment",
+      type: "savings",
       color: "#10B981",
       icon: "bars",
-      sortOrder: 5,
+      sortOrder: 105,
     },
     {
       id: "pluang-cash",
       name: "Investasi Pluang (cash)",
       balance: randomIdr(10_000, 500_000, 1),
       currency: "IDR",
-      type: "investment",
+      type: "savings",
       color: "#10B981",
       icon: "cash",
-      sortOrder: 6,
+      sortOrder: 106,
     },
     {
       id: "pluang-cash-usd",
       name: "Investasi Pluang (cash USD)",
       balance: maybeZero(0.5) ? 0 : randomUsd(1, 250),
       currency: "USD",
-      type: "investment",
+      type: "savings",
       color: "#FACC15",
       icon: "dollar",
-      sortOrder: 7,
+      sortOrder: 107,
     },
     {
       id: "pluang-emas",
       name: "Investasi Pluang (emas)",
       balance: randomIdr(500_000, 12_000_000, 1),
       currency: "IDR",
-      type: "investment",
+      type: "savings",
       color: "#F59E0B",
       icon: "gold",
-      sortOrder: 8,
+      sortOrder: 108,
     },
     {
       id: "pluang-saham",
       name: "Akumulasi Saham Pluang",
       balance: maybeZero(0.3) ? 0 : randomUsd(0.1, 50),
       currency: "USD",
-      type: "investment",
+      type: "savings",
       color: "#374151",
       icon: "vault",
-      sortOrder: 9,
+      sortOrder: 109,
     },
     {
       id: "pluang-btc",
       name: "Investasi Pluang (BTC)",
       balance: maybeZero(0.55) ? 0 : randomIdr(50_000, 3_000_000, 1),
       currency: "IDR",
-      type: "investment",
+      type: "savings",
       color: "#F97316",
       icon: "vault",
-      sortOrder: 10,
+      sortOrder: 110,
     },
   ];
 }
@@ -307,8 +308,11 @@ export const EMPTY_ACCOUNTS_RESPONSE: AccountsResponse = {
 /** Build a fresh randomized mock dataset. */
 export function createMockAccountsResponse(): AccountsResponse {
   const accounts = createMockAccounts();
-  const savings = createMockSavings();
-  const investments = createMockInvestments();
+  const savings = [
+    ...createMockSavings(),
+    ...createMockInvestmentAsSavings(),
+  ];
+  const investments: Account[] = [];
   const archived: Account[] = [];
 
   return {
@@ -319,7 +323,7 @@ export function createMockAccountsResponse(): AccountsResponse {
     totals: {
       accounts: sumIdrBalances(accounts),
       savings: sumIdrBalances(savings),
-      investments: sumIdrBalances(investments),
+      investments: 0,
     },
   };
 }

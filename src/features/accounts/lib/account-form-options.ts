@@ -12,7 +12,6 @@ export const ACCOUNT_TYPE_LABELS: Record<string, string> = {
   regular: "Regular",
   debt: "Debt",
   savings: "Savings",
-  investment: "Investment",
 };
 
 export const ACCOUNT_ICON_COLORS = [
