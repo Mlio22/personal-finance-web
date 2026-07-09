@@ -1,14 +1,11 @@
 "use client";
 
 import type { Account } from "@/features/accounts/types";
-import {
-  getSavingsProgress,
-  getSavingsRemaining,
-} from "@/features/accounts/data/mock-accounts";
+import { getSavingsProgress } from "@/features/accounts/data/mock-accounts";
 import { AccountAvatar } from "@/features/accounts/components/account-avatar";
 import { ProgressRing } from "@/features/accounts/components/progress-ring";
 import { getAccountDescription } from "@/features/accounts/lib/account-store";
-import { formatIdr, formatMoney } from "@/lib/format-currency";
+import { formatMoney } from "@/lib/format-currency";
 import { cn } from "@/lib/utils";
 
 interface SavingsAccountRowProps {
@@ -23,7 +20,6 @@ export function SavingsAccountRow({
   className,
 }: SavingsAccountRowProps) {
   const progress = getSavingsProgress(account);
-  const remaining = getSavingsRemaining(account);
   const isZero = account.balance === 0;
   const hasGoal = Boolean(account.isSavingsGoal && account.savingsTarget);
   const description = getAccountDescription(account);
@@ -45,33 +41,37 @@ export function SavingsAccountRow({
 
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold text-foreground">{account.name}</p>
+
+        <div className="mt-0.5 flex items-center gap-2">
+          <p
+            className={cn(
+              "min-w-0 flex-1 text-sm tabular-nums",
+              isZero ? "text-muted-foreground" : "text-positive",
+            )}
+          >
+            {formatMoney(account.balance, account.currency, {
+              maximumFractionDigits: 2,
+            })}
+          </p>
+
+          {hasGoal ? (
+            <div className="flex shrink-0 items-center gap-2.5">
+              <p className="text-sm font-medium tabular-nums text-foreground">
+                {formatMoney(account.savingsTarget ?? 0, account.currency, {
+                  maximumFractionDigits: 2,
+                })}
+              </p>
+              <ProgressRing progress={progress} />
+            </div>
+          ) : null}
+        </div>
+
         {description ? (
           <p className="mt-0.5 break-words text-xs leading-relaxed text-muted-foreground">
             {description}
           </p>
         ) : null}
-        <p
-          className={cn(
-            "mt-0.5 text-sm tabular-nums",
-            isZero ? "text-muted-foreground" : "text-positive",
-          )}
-        >
-          {formatMoney(account.balance, account.currency, {
-            maximumFractionDigits: 2,
-          })}
-        </p>
       </div>
-
-      {hasGoal ? (
-        <div className="flex shrink-0 items-center gap-2.5 self-center">
-          <span className="text-sm font-medium tabular-nums text-foreground">
-            {formatIdr(
-              remaining > 0 ? remaining : (account.savingsTarget ?? 0),
-            )}
-          </span>
-          <ProgressRing progress={progress} />
-        </div>
-      ) : null}
     </button>
   );
 }
