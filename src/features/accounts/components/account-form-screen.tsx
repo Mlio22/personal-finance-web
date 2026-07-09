@@ -26,6 +26,7 @@ import {
 } from "@/features/accounts/lib/account-form-options";
 import { AccountAvatar } from "@/features/accounts/components/account-avatar";
 import { AccountIconPicker } from "@/features/accounts/components/account-icon-picker";
+import { AmountInputModal } from "@/components/amount-input";
 import { formatMoney } from "@/lib/format-currency";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -335,24 +336,25 @@ export function AccountFormScreen({
         onSelect={(id) => updateField("currency", id)}
       />
 
-      <AmountEditorDrawer
+      <AmountInputModal
         open={balanceOpen}
         onOpenChange={setBalanceOpen}
         title="Account balance"
         currency={values.currency}
         value={values.balance}
-        onSave={(amount) => updateField("balance", amount)}
+        onConfirm={(amount) => updateField("balance", amount)}
       />
 
-      <AmountEditorDrawer
+      <AmountInputModal
         open={secondaryAmountOpen}
         onOpenChange={setSecondaryAmountOpen}
         title={secondaryLabel}
         currency={values.currency}
         value={secondaryValue}
-        onSave={(amount) =>
+        onConfirm={(amount) =>
           updateField(isSavingsLike ? "savingsTarget" : "creditLimit", amount)
         }
+        showSignModes={!isSavingsLike}
       />
 
       <AccountIconPicker
@@ -484,72 +486,6 @@ function OptionPickerDrawer({
               </button>
             </DrawerClose>
           ))}
-        </div>
-      </DrawerContent>
-    </Drawer>
-  );
-}
-
-function AmountEditorDrawer({
-  open,
-  onOpenChange,
-  title,
-  currency,
-  value,
-  onSave,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  title: string;
-  currency: string;
-  value: number;
-  onSave: (amount: number) => void;
-}) {
-  const [draft, setDraft] = useState(String(value));
-
-  return (
-    <Drawer
-      open={open}
-      onOpenChange={(nextOpen) => {
-        if (nextOpen) {
-          setDraft(String(value));
-        }
-        onOpenChange(nextOpen);
-      }}
-    >
-      <DrawerContent className="mx-auto max-w-lg px-4 pb-8">
-        <DrawerHeader className="px-0">
-          <DrawerTitle>{title}</DrawerTitle>
-        </DrawerHeader>
-
-        <div className="space-y-4">
-          <div>
-            <label
-              htmlFor={`amount-${title}`}
-              className="mb-2 block text-sm text-muted-foreground"
-            >
-              Amount ({currency})
-            </label>
-            <Input
-              id={`amount-${title}`}
-              inputMode="decimal"
-              value={draft}
-              onChange={(event) => setDraft(event.target.value)}
-              className="h-11 text-lg tabular-nums"
-            />
-          </div>
-
-          <Button
-            type="button"
-            className="w-full"
-            onClick={() => {
-              const parsed = Number(draft.replace(/,/g, ""));
-              onSave(Number.isFinite(parsed) ? parsed : 0);
-              onOpenChange(false);
-            }}
-          >
-            Save
-          </Button>
         </div>
       </DrawerContent>
     </Drawer>
