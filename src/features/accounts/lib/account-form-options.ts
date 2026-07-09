@@ -40,16 +40,3 @@ export function getCurrencyLabel(code: string): string {
     code
   );
 }
-
-export function getTypeIconForAccountType(type: string) {
-  switch (type) {
-    case "savings":
-      return "vault" as const;
-    case "debt":
-      return "hand" as const;
-    case "investment":
-      return "chart" as const;
-    default:
-      return "wallet" as const;
-  }
-}
