@@ -13,6 +13,7 @@ interface AccountRowProps {
 
 export function AccountRow({ account, onSelect, className }: AccountRowProps) {
   const isZero = account.balance === 0;
+  const description = account.description?.trim();
 
   return (
     <button
@@ -30,13 +31,18 @@ export function AccountRow({ account, onSelect, className }: AccountRowProps) {
         showStar={account.isDefault}
       />
 
-      <span className="min-w-0 flex-1">
+      <span className="min-w-0 flex-1 overflow-hidden">
         <span className="block truncate text-sm font-semibold text-foreground">
           {account.name}
         </span>
+        {description ? (
+          <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+            {description}
+          </span>
+        ) : null}
         <span
           className={cn(
-            "mt-0.5 block text-sm tabular-nums",
+            "mt-0.5 block truncate text-sm tabular-nums",
             isZero ? "text-muted-foreground" : "text-positive",
           )}
         >

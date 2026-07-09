@@ -223,8 +223,9 @@ export function AccountFormScreen({
                 onChange={(event) =>
                   updateField("description", event.target.value)
                 }
-                placeholder=""
+                placeholder="Optional"
                 className="mt-1 w-full min-h-[1.75rem] border-0 bg-transparent px-0 py-1 text-left text-[0.9375rem] text-foreground caret-foreground outline-none placeholder:text-muted-foreground"
+                autoComplete="off"
               />
             </div>
           </div>

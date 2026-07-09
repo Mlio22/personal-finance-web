@@ -25,6 +25,7 @@ export function SavingsAccountRow({
   const remaining = getSavingsRemaining(account);
   const isZero = account.balance === 0;
   const hasGoal = Boolean(account.isSavingsGoal && account.savingsTarget);
+  const description = account.description?.trim();
 
   return (
     <button
@@ -41,13 +42,18 @@ export function SavingsAccountRow({
         icon={account.icon}
       />
 
-      <span className="min-w-0 flex-1">
+      <span className="min-w-0 flex-1 overflow-hidden">
         <span className="block truncate text-sm font-semibold text-foreground">
           {account.name}
         </span>
+        {description ? (
+          <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+            {description}
+          </span>
+        ) : null}
         <span
           className={cn(
-            "mt-0.5 block text-sm tabular-nums",
+            "mt-0.5 block truncate text-sm tabular-nums",
             isZero ? "text-muted-foreground" : "text-positive",
           )}
         >
@@ -56,7 +62,7 @@ export function SavingsAccountRow({
           })}
         </span>
         {account.goalLabel ? (
-          <span className="mt-0.5 block text-xs text-muted-foreground">
+          <span className="mt-0.5 block truncate text-xs text-muted-foreground">
             {account.goalLabel}
           </span>
         ) : null}

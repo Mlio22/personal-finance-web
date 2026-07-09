@@ -55,29 +55,31 @@ export function AccountFormPage({
     router.back();
   }
 
-  function invalidateAccountQueries() {
-    void queryClient.invalidateQueries({ queryKey: ["accounts"] });
+  function syncAccountsQuery(next: ReturnType<typeof upsertAccountInMockCache>) {
+    queryClient.setQueryData(["accounts"], {
+      data: next,
+      isUsingFallback: true,
+    });
     void queryClient.invalidateQueries({ queryKey: ["overview"] });
     void queryClient.invalidateQueries({ queryKey: ["transactions"] });
   }
 
   function handleSubmit(values: AccountFormValues) {
-    if (mode === "edit" && existingAccount) {
-      upsertAccountInMockCache(
-        applyFormValuesToAccount(existingAccount, values),
-      );
-    } else {
-      upsertAccountInMockCache(createAccountFromForm(values));
-    }
+    const next =
+      mode === "edit" && existingAccount
+        ? upsertAccountInMockCache(
+            applyFormValuesToAccount(existingAccount, values),
+          )
+        : upsertAccountInMockCache(createAccountFromForm(values));
 
-    invalidateAccountQueries();
+    syncAccountsQuery(next);
     router.push("/accounts");
   }
 
   function handleDelete() {
     if (!existingAccount) return;
-    deleteAccountFromMockCache(existingAccount.id);
-    invalidateAccountQueries();
+    const next = deleteAccountFromMockCache(existingAccount.id);
+    syncAccountsQuery(next);
     router.push("/accounts");
   }
 
