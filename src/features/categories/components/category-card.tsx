@@ -1,8 +1,11 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import { CategoryIcon } from "@/features/categories/components/category-icon";
-import { getCategoryRemainingDisplay } from "@/features/categories/lib/category-display";
+import { CategoryBudgetIcon } from "@/features/categories/components/category-budget-icon";
+import {
+  getCategoryRemainingDisplay,
+  hasCategoryBudget,
+} from "@/features/categories/lib/category-display";
 import type { CategorySummaryItem } from "@/features/categories/types";
 import { formatIdr } from "@/lib/format-currency";
 import { cn } from "@/lib/utils";
@@ -46,8 +49,11 @@ export function CategoryCard({
   className,
   style,
 }: CategoryCardProps) {
-  const { displayAmount, isOverBudget, showHighlight } =
-    getCategoryRemainingDisplay(category.budgetedAmount, category.spentAmount);
+  const { isOverBudget } = getCategoryRemainingDisplay(
+    category.budgetedAmount,
+    category.spentAmount,
+  );
+  const hasBudget = hasCategoryBudget(category.budgetedAmount);
   const isEdge = density === "edge";
 
   return (
@@ -63,7 +69,7 @@ export function CategoryCard({
         className,
       )}
       style={style}
-      aria-label={`${category.name}, remaining ${formatIdr(displayAmount)}, spent ${formatIdr(category.spentAmount)}`}
+      aria-label={`${category.name}, spent ${formatIdr(category.spentAmount)}, budgeted ${formatIdr(category.budgetedAmount)}`}
     >
       <span
         className={cn(
@@ -74,49 +80,39 @@ export function CategoryCard({
         {category.name}
       </span>
 
-      {showHighlight ? (
-        <span
-          className={cn(
-            "max-w-full truncate rounded-full px-2 py-0.5 font-semibold tabular-nums leading-none text-background",
-            isEdge ? "text-[9px]" : "text-[10px]",
-            isOverBudget && "text-white",
-          )}
-          style={{ backgroundColor: category.color }}
-        >
-          {formatCompactIdr(displayAmount)}
-        </span>
-      ) : (
-        <span
-          className={cn(
-            "font-medium tabular-nums leading-none text-muted-foreground",
-            isEdge ? "text-[9px]" : "text-[10px]",
-          )}
-        >
-          {formatCompactIdr(displayAmount)}
-        </span>
-      )}
+      <span
+        className={cn(
+          "max-w-full truncate font-medium tabular-nums leading-none text-muted-foreground",
+          isEdge ? "text-[9px]" : "text-[10px]",
+        )}
+      >
+        {formatCompactIdr(category.spentAmount)}
+      </span>
 
-      <CategoryIcon
+      <CategoryBudgetIcon
         icon={category.icon}
         color={category.color}
-        className="flex size-10 shrink-0 items-center justify-center rounded-xl"
+        budgetedAmount={category.budgetedAmount}
+        spentAmount={category.spentAmount}
       />
 
       <span
         className={cn(
           "max-w-full truncate font-semibold tabular-nums leading-none",
           isEdge ? "text-[9px]" : "text-[10px]",
-          category.spentAmount > 0 || isOverBudget
+          hasBudget || category.spentAmount > 0 || isOverBudget
             ? undefined
             : "text-muted-foreground",
         )}
         style={
-          category.spentAmount > 0 || isOverBudget
+          hasBudget || category.spentAmount > 0 || isOverBudget
             ? { color: category.color }
             : undefined
         }
       >
-        {formatCompactIdr(category.spentAmount)}
+        {hasBudget
+          ? formatCompactIdr(category.budgetedAmount)
+          : formatCompactIdr(category.spentAmount)}
       </span>
     </button>
   );

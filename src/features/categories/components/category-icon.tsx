@@ -11,6 +11,7 @@ import {
   Zap,
   type LucideIcon,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const CATEGORY_ICONS: Record<string, LucideIcon> = {
   "heart-pulse": HeartPulse,
@@ -25,6 +26,17 @@ const CATEGORY_ICONS: Record<string, LucideIcon> = {
   ellipsis: Ellipsis,
 };
 
+interface CategoryIconGlyphProps {
+  icon: string;
+  className?: string;
+}
+
+export function CategoryIconGlyph({ icon, className }: CategoryIconGlyphProps) {
+  const Icon = CATEGORY_ICONS[icon] ?? Ellipsis;
+
+  return <Icon className={className} strokeWidth={1.75} aria-hidden="true" />;
+}
+
 interface CategoryIconProps {
   icon: string;
   color: string;
@@ -32,15 +44,16 @@ interface CategoryIconProps {
 }
 
 export function CategoryIcon({ icon, color, className }: CategoryIconProps) {
-  const Icon = CATEGORY_ICONS[icon] ?? Ellipsis;
-
   return (
     <span
-      className={className}
+      className={cn(
+        "flex items-center justify-center rounded-full",
+        className,
+      )}
       style={{ backgroundColor: color }}
       aria-hidden="true"
     >
-      <Icon className="size-5 text-white" strokeWidth={1.75} />
+      <CategoryIconGlyph icon={icon} className="size-5 text-white" />
     </span>
   );
 }
