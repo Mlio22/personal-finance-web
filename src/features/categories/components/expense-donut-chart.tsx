@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { CategoryKind, CategorySummaryItem } from "@/features/categories/types";
 import { formatIdr } from "@/lib/format-currency";
 import { cn } from "@/lib/utils";
@@ -83,6 +83,7 @@ export function ExpenseDonutChart({
 }: ExpenseDonutChartProps) {
   const maskId = useId().replace(/:/g, "");
   const [drawn, setDrawn] = useState(false);
+  const hasPlayedEntranceRef = useRef(false);
   const isIncomeView = viewKind === "income";
 
   const segments = useMemo(() => {
@@ -114,12 +115,13 @@ export function ExpenseDonutChart({
     });
   }, [categories]);
 
-  const segmentsKey = `${viewKind}|${segments
-    .map((segment) => segment.categoryId)
-    .join("|")}`;
-
   useEffect(() => {
-    setDrawn(false);
+    if (hasPlayedEntranceRef.current) {
+      setDrawn(true);
+      return;
+    }
+
+    hasPlayedEntranceRef.current = true;
     let nextFrame = 0;
     const frame = requestAnimationFrame(() => {
       nextFrame = requestAnimationFrame(() => {
@@ -130,7 +132,7 @@ export function ExpenseDonutChart({
       cancelAnimationFrame(frame);
       cancelAnimationFrame(nextFrame);
     };
-  }, [segmentsKey]);
+  }, []);
 
   const primaryLabel = isIncomeView ? "Income" : "Expenses";
   const primaryAmount = isIncomeView ? totalIncome : totalExpenses;

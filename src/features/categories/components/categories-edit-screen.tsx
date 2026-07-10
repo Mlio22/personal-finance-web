@@ -6,28 +6,19 @@ import { useRouter } from "next/navigation";
 import { AddCategoryCard } from "@/features/categories/components/add-category-card";
 import { CategoriesKindTabs } from "@/features/categories/components/categories-kind-tabs";
 import { CategoryCard } from "@/features/categories/components/category-card";
+import { CategoryGridPlaceholder } from "@/features/categories/components/category-grid-placeholder";
 import { ExpenseDonutChart } from "@/features/categories/components/expense-donut-chart";
 import { useCategoriesSummary } from "@/features/categories/hooks/use-categories-summary";
 import { useOverview } from "@/features/categories/hooks/use-overview";
+import { partitionCategoryGrid } from "@/features/categories/lib/category-grid-layout";
 import type {
   CategoryKind,
-  CategorySummaryItem,
 } from "@/features/categories/types";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-const MAIN_GRID_CAPACITY = 12;
-
-function partitionCategories(categories: CategorySummaryItem[]) {
-  const main = categories.slice(0, MAIN_GRID_CAPACITY);
-  const overflow = categories.slice(MAIN_GRID_CAPACITY);
-
-  return {
-    top: main.slice(0, 4),
-    middleLeft: [main[4], main[6]].filter(Boolean),
-    middleRight: [main[5], main[7]].filter(Boolean),
-    bottom: main.slice(8, 12),
-    overflow,
-  };
+function getBottomCardPlacement(index: number) {
+  return { gridColumnStart: index + 1, className: undefined };
 }
 
 export function CategoriesEditScreen({
@@ -74,8 +65,9 @@ export function CategoriesEditScreen({
   }
 
   const { top, middleLeft, middleRight, bottom, overflow } =
-    partitionCategories(categories);
-  const showAddInBottom = bottom.length < 4;
+    partitionCategoryGrid(categories);
+  const filledBottomCount = bottom.filter(Boolean).length;
+  const showAddInBottom = filledBottomCount < 4;
   const showAddInOverflow = !showAddInBottom;
 
   return (
@@ -103,17 +95,26 @@ export function CategoriesEditScreen({
 
       <div className="mt-3 flex min-h-0 flex-1 flex-col gap-2 pb-1">
         <div className="grid min-h-0 flex-1 grid-cols-4 grid-rows-[auto_1fr_1fr_auto] gap-1">
-          {top.map((category, index) => (
-            <CategoryCard
-              key={category.id}
-              category={category}
-              density="edge"
-              highlighted={selectedCategoryId === category.id}
-              onSelect={handleSelect}
-              className="row-start-1"
-              style={{ gridColumnStart: index + 1 }}
-            />
-          ))}
+          {top.map((category, index) =>
+            category ? (
+              <CategoryCard
+                key={category.id}
+                category={category}
+                density="edge"
+                highlighted={selectedCategoryId === category.id}
+                onSelect={handleSelect}
+                className="row-start-1"
+                style={{ gridColumnStart: index + 1 }}
+              />
+            ) : (
+              <CategoryGridPlaceholder
+                key={`top-${index}`}
+                density="edge"
+                className="row-start-1"
+                style={{ gridColumnStart: index + 1 }}
+              />
+            ),
+          )}
 
           {middleLeft[0] ? (
             <CategoryCard
@@ -123,7 +124,12 @@ export function CategoriesEditScreen({
               onSelect={handleSelect}
               className="col-start-1 row-start-2 self-center"
             />
-          ) : null}
+          ) : (
+            <CategoryGridPlaceholder
+              density="flank"
+              className="col-start-1 row-start-2 self-center"
+            />
+          )}
 
           <div className="col-span-2 row-span-2 col-start-2 row-start-2 flex min-h-0 min-w-0 items-center justify-center">
             <ExpenseDonutChart
@@ -149,7 +155,12 @@ export function CategoriesEditScreen({
               onSelect={handleSelect}
               className="col-start-4 row-start-2 self-center"
             />
-          ) : null}
+          ) : (
+            <CategoryGridPlaceholder
+              density="flank"
+              className="col-start-4 row-start-2 self-center"
+            />
+          )}
 
           {middleLeft[1] ? (
             <CategoryCard
@@ -159,7 +170,12 @@ export function CategoriesEditScreen({
               onSelect={handleSelect}
               className="col-start-1 row-start-3 self-center"
             />
-          ) : null}
+          ) : (
+            <CategoryGridPlaceholder
+              density="flank"
+              className="col-start-1 row-start-3 self-center"
+            />
+          )}
 
           {middleRight[1] ? (
             <CategoryCard
@@ -169,27 +185,50 @@ export function CategoriesEditScreen({
               onSelect={handleSelect}
               className="col-start-4 row-start-3 self-center"
             />
-          ) : null}
-
-          {bottom.map((category, index) => (
-            <CategoryCard
-              key={category.id}
-              category={category}
-              density="edge"
-              highlighted={selectedCategoryId === category.id}
-              onSelect={handleSelect}
-              className="row-start-4 self-center"
-              style={{ gridColumnStart: index + 1 }}
+          ) : (
+            <CategoryGridPlaceholder
+              density="flank"
+              className="col-start-4 row-start-3 self-center"
             />
-          ))}
+          )}
 
-          {showAddInBottom ? (
-            <AddCategoryCard
-              onClick={handleAdd}
-              className="row-start-4 self-center"
-              style={{ gridColumnStart: bottom.length + 1 }}
-            />
-          ) : null}
+          {bottom.map((category, index) => {
+            const placement = getBottomCardPlacement(index);
+
+            if (category) {
+              return (
+                <CategoryCard
+                  key={category.id}
+                  category={category}
+                  density="edge"
+                  highlighted={selectedCategoryId === category.id}
+                  onSelect={handleSelect}
+                  className={cn("row-start-4 self-center", placement.className)}
+                  style={{ gridColumnStart: placement.gridColumnStart }}
+                />
+              );
+            }
+
+            if (showAddInBottom && index === filledBottomCount) {
+              return (
+                <AddCategoryCard
+                  key="add-category"
+                  onClick={handleAdd}
+                  className={cn("row-start-4 self-center", placement.className)}
+                  style={{ gridColumnStart: placement.gridColumnStart }}
+                />
+              );
+            }
+
+            return (
+              <CategoryGridPlaceholder
+                key={`bottom-${index}`}
+                density="edge"
+                className={cn("row-start-4 self-center", placement.className)}
+                style={{ gridColumnStart: placement.gridColumnStart }}
+              />
+            );
+          })}
         </div>
 
         {overflow.length > 0 || showAddInOverflow ? (

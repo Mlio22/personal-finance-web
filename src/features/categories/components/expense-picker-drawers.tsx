@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   ArrowDown,
   ArrowLeft,
@@ -17,6 +17,14 @@ import {
 import { AccountAvatar } from "@/features/accounts/components/account-avatar";
 import { CategoryBudgetIcon } from "@/features/categories/components/category-budget-icon";
 import type { CategorySummaryItem } from "@/features/categories/types";
+import {
+  getRecurrenceLabel,
+  getReminderLabel,
+  RECURRENCE_OPTIONS,
+  REMINDER_OPTIONS,
+  type RecurrenceValue,
+  type ReminderValue,
+} from "@/features/categories/lib/transaction-schedule-options";
 import type { Account } from "@/features/accounts/types";
 import {
   NestedDrawer,
@@ -259,6 +267,95 @@ interface ExpenseDatePickerDrawerProps {
   onOpenChange: (open: boolean) => void;
   selectedDate: Date;
   onSelect: (date: Date) => void;
+  selectedRecurrence: RecurrenceValue;
+  onRecurrenceChange: (value: RecurrenceValue) => void;
+  selectedReminder: ReminderValue;
+  onReminderChange: (value: ReminderValue) => void;
+}
+
+interface ExpenseScheduleRadioDrawerProps<T extends string> {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  icon: ReactNode;
+  options: readonly { value: T; label: string }[];
+  selected: T;
+  onConfirm: (value: T) => void;
+}
+
+function ExpenseScheduleRadioDrawer<T extends string>({
+  open,
+  onOpenChange,
+  title,
+  icon,
+  options,
+  selected,
+  onConfirm,
+}: ExpenseScheduleRadioDrawerProps<T>) {
+  const [draftValue, setDraftValue] = useState(selected);
+
+  useEffect(() => {
+    if (open) {
+      setDraftValue(selected);
+    }
+  }, [open, selected]);
+
+  return (
+    <NestedDrawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent className={EXPENSE_DRAWER_CLASS}>
+        <div className="flex items-center gap-2 px-4 pt-2">
+          {icon}
+          <DrawerTitle className="text-base font-semibold text-foreground">
+            {title}
+          </DrawerTitle>
+        </div>
+
+        <div className="max-h-[55dvh] space-y-0.5 overflow-y-auto px-2 py-2">
+          {options.map((option) => {
+            const isSelected = option.value === draftValue;
+
+            return (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setDraftValue(option.value)}
+                className="flex w-full items-center gap-3 rounded-2xl px-3 py-3.5 text-left transition-colors hover:bg-[#3a3a3c]"
+              >
+                <span
+                  className={cn(
+                    "flex size-5 shrink-0 items-center justify-center rounded-full border-2",
+                    isSelected
+                      ? "border-white bg-white"
+                      : "border-[#6b7280] bg-transparent",
+                  )}
+                >
+                  {isSelected ? (
+                    <span className="size-2.5 rounded-full bg-[#2c2c2e]" />
+                  ) : null}
+                </span>
+                <span className="text-sm font-medium text-foreground">
+                  {option.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flex justify-end px-4 pb-5 pt-2">
+          <button
+            type="button"
+            onClick={() => {
+              onConfirm(draftValue);
+              onOpenChange(false);
+            }}
+            className="rounded-full bg-[#4a4a4c] px-5 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-[#56565a]"
+          >
+            OK
+          </button>
+        </div>
+      </DrawerContent>
+    </NestedDrawer>
+  );
 }
 
 export function ExpenseDatePickerDrawer({
@@ -266,12 +363,26 @@ export function ExpenseDatePickerDrawer({
   onOpenChange,
   selectedDate,
   onSelect,
+  selectedRecurrence,
+  onRecurrenceChange,
+  selectedReminder,
+  onReminderChange,
 }: ExpenseDatePickerDrawerProps) {
   const dateInputRef = useRef<HTMLInputElement>(null);
+  const [recurrencePickerOpen, setRecurrencePickerOpen] = useState(false);
+  const [reminderPickerOpen, setReminderPickerOpen] = useState(false);
   const today = startOfDay(new Date());
   const yesterday = shiftDays(today, -1);
   const isTodaySelected = isSameDay(selectedDate, today);
   const isYesterdaySelected = isSameDay(selectedDate, yesterday);
+
+  function handleOpenChange(nextOpen: boolean) {
+    if (!nextOpen && (recurrencePickerOpen || reminderPickerOpen)) {
+      return;
+    }
+
+    onOpenChange(nextOpen);
+  }
 
   function handleSelect(date: Date) {
     onSelect(date);
@@ -279,7 +390,11 @@ export function ExpenseDatePickerDrawer({
   }
 
   return (
-    <NestedDrawer open={open} onOpenChange={onOpenChange}>
+    <NestedDrawer
+      open={open}
+      onOpenChange={handleOpenChange}
+      dismissible={!recurrencePickerOpen && !reminderPickerOpen}
+    >
       <DrawerContent className={EXPENSE_DRAWER_CLASS}>
         <DrawerTitle className="px-4 pt-1 text-center text-base font-semibold text-foreground">
           Date
@@ -357,28 +472,52 @@ export function ExpenseDatePickerDrawer({
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
-              disabled
-              className={cn(PICKER_CARD_CLASS, "opacity-60")}
+              onClick={() => setRecurrencePickerOpen(true)}
+              className={PICKER_CARD_CLASS}
             >
               <div className="flex items-center gap-2 text-sm font-medium">
                 <Repeat className="size-4 shrink-0" aria-hidden="true" />
                 Recurrence
               </div>
-              <p className="mt-1 pl-6 text-xs text-muted-foreground">None</p>
+              <p className="mt-1 pl-6 text-xs text-muted-foreground">
+                {getRecurrenceLabel(selectedRecurrence)}
+              </p>
             </button>
             <button
               type="button"
-              disabled
-              className={cn(PICKER_CARD_CLASS, "opacity-60")}
+              onClick={() => setReminderPickerOpen(true)}
+              className={PICKER_CARD_CLASS}
             >
               <div className="flex items-center gap-2 text-sm font-medium">
                 <Bell className="size-4 shrink-0" aria-hidden="true" />
                 Reminder
               </div>
-              <p className="mt-1 pl-6 text-xs text-muted-foreground">None</p>
+              <p className="mt-1 pl-6 text-xs text-muted-foreground">
+                {getReminderLabel(selectedReminder)}
+              </p>
             </button>
           </div>
         </div>
+
+        <ExpenseScheduleRadioDrawer
+          open={recurrencePickerOpen}
+          onOpenChange={setRecurrencePickerOpen}
+          title="Recurrence"
+          icon={<Repeat className="size-5" aria-hidden="true" />}
+          options={RECURRENCE_OPTIONS}
+          selected={selectedRecurrence}
+          onConfirm={onRecurrenceChange}
+        />
+
+        <ExpenseScheduleRadioDrawer
+          open={reminderPickerOpen}
+          onOpenChange={setReminderPickerOpen}
+          title="Reminder"
+          icon={<Bell className="size-5" aria-hidden="true" />}
+          options={REMINDER_OPTIONS}
+          selected={selectedReminder}
+          onConfirm={onReminderChange}
+        />
       </DrawerContent>
     </NestedDrawer>
   );

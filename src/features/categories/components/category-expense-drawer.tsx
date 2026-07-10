@@ -31,7 +31,11 @@ import {
   getCategorySubcategories,
   type CategorySubcategory,
 } from "@/features/categories/lib/categories-store";
-import type { CategorySummaryItem } from "@/features/categories/types";
+import type {
+  RecurrenceValue,
+  ReminderValue,
+} from "@/features/categories/lib/transaction-schedule-options";
+import type { CategoryKind, CategorySummaryItem } from "@/features/categories/types";
 import { Input } from "@/components/ui/input";
 import {
   Drawer,
@@ -54,6 +58,8 @@ export interface CategoryExpenseConfirmPayload {
   categoryColor: string;
   currency: string;
   date: Date;
+  recurrence?: RecurrenceValue;
+  reminder?: ReminderValue;
 }
 
 interface CategoryExpenseDrawerProps {
@@ -63,6 +69,7 @@ interface CategoryExpenseDrawerProps {
   account: Account | null;
   accounts: Account[];
   categories: CategorySummaryItem[];
+  transactionKind?: CategoryKind;
   onConfirm?: (payload: CategoryExpenseConfirmPayload) => void;
 }
 
@@ -95,6 +102,7 @@ export function CategoryExpenseDrawer({
   account,
   accounts,
   categories,
+  transactionKind = "expense",
   onConfirm,
 }: CategoryExpenseDrawerProps) {
   const [expression, setExpression] = useState<AmountExpressionState>(() =>
@@ -112,6 +120,10 @@ export function CategoryExpenseDrawer({
   );
   const [selectedDate, setSelectedDate] = useState(() => startOfDay(new Date()));
   const [selectedCurrency, setSelectedCurrency] = useState("IDR");
+  const [selectedRecurrence, setSelectedRecurrence] =
+    useState<RecurrenceValue>("none");
+  const [selectedReminder, setSelectedReminder] =
+    useState<ReminderValue>("none");
   const [accountPickerOpen, setAccountPickerOpen] = useState(false);
   const [categoryPickerOpen, setCategoryPickerOpen] = useState(false);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
@@ -163,6 +175,8 @@ export function CategoryExpenseDrawer({
     setSelectedCategoryId(category.id);
     setSelectedDate(startOfDay(new Date()));
     setSelectedCurrency(account.currency ?? "IDR");
+    setSelectedRecurrence("none");
+    setSelectedReminder("none");
     setSelectedSubcategoryId(
       getCategorySubcategories(category.id)[0]?.id ?? null,
     );
@@ -179,6 +193,8 @@ export function CategoryExpenseDrawer({
 
   const pendingOperation = hasPendingOperation(expression);
   const accentColor = activeCategory?.color ?? "#a855f7";
+  const isIncome = transactionKind === "income";
+  const transactionLabel = isIncome ? "Income" : "Expense";
 
   function handleParentOpenChange(nextOpen: boolean) {
     // Nested pickers must close first — never dismiss the transaction modal
@@ -233,6 +249,8 @@ export function CategoryExpenseDrawer({
       categoryColor: activeCategory.color,
       currency: selectedCurrency,
       date: selectedDate,
+      recurrence: selectedRecurrence,
+      reminder: selectedReminder,
     });
     onOpenChange(false);
   }
@@ -254,43 +272,84 @@ export function CategoryExpenseDrawer({
     >
       <DrawerContent className="mx-auto max-h-[92dvh] max-w-lg gap-0 overflow-y-auto rounded-t-[1.75rem] border-0 bg-[#1c1c1e] px-0 pb-[env(safe-area-inset-bottom)] [&>div:first-child]:mt-2.5 [&>div:first-child]:h-1 [&>div:first-child]:w-10 [&>div:first-child]:bg-[#3a3a3c]">
         <DrawerTitle className="sr-only">
-          Add expense to {activeCategory.name}
+          Add {transactionLabel.toLowerCase()} {isIncome ? "from" : "to"}{" "}
+          {activeCategory.name}
         </DrawerTitle>
 
         <div className="grid grid-cols-2 gap-2.5 px-4 pb-3 pt-3">
-          <EndpointCard
-            label="From account"
-            name={activeAccount.name}
-            color={activeAccount.color ?? "#0ea5e9"}
-            onClick={() => setAccountPickerOpen(true)}
-            icon={
-              <span className="flex size-11 items-center justify-center rounded-xl bg-white">
-                <AccountIcon
-                  className="size-5"
-                  strokeWidth={1.75}
-                  style={{ color: activeAccount.color ?? "#0ea5e9" }}
-                  aria-hidden="true"
-                />
-              </span>
-            }
-          />
-          <EndpointCard
-            label="To category"
-            name={activeCategory.name}
-            color={activeCategory.color}
-            onClick={() => setCategoryPickerOpen(true)}
-            icon={
-              <span
-                className="flex size-11 items-center justify-center rounded-full bg-white"
-                style={{ color: activeCategory.color }}
-              >
-                <CategoryIconGlyph
-                  icon={activeCategory.icon}
-                  className="size-5"
-                />
-              </span>
-            }
-          />
+          {isIncome ? (
+            <>
+              <EndpointCard
+                label="From category"
+                name={activeCategory.name}
+                color={activeCategory.color}
+                onClick={() => setCategoryPickerOpen(true)}
+                icon={
+                  <span
+                    className="flex size-11 items-center justify-center rounded-full bg-white"
+                    style={{ color: activeCategory.color }}
+                  >
+                    <CategoryIconGlyph
+                      icon={activeCategory.icon}
+                      className="size-5"
+                    />
+                  </span>
+                }
+              />
+              <EndpointCard
+                label="To account"
+                name={activeAccount.name}
+                color={activeAccount.color ?? "#0ea5e9"}
+                onClick={() => setAccountPickerOpen(true)}
+                icon={
+                  <span className="flex size-11 items-center justify-center rounded-xl bg-white">
+                    <AccountIcon
+                      className="size-5"
+                      strokeWidth={1.75}
+                      style={{ color: activeAccount.color ?? "#0ea5e9" }}
+                      aria-hidden="true"
+                    />
+                  </span>
+                }
+              />
+            </>
+          ) : (
+            <>
+              <EndpointCard
+                label="From account"
+                name={activeAccount.name}
+                color={activeAccount.color ?? "#0ea5e9"}
+                onClick={() => setAccountPickerOpen(true)}
+                icon={
+                  <span className="flex size-11 items-center justify-center rounded-xl bg-white">
+                    <AccountIcon
+                      className="size-5"
+                      strokeWidth={1.75}
+                      style={{ color: activeAccount.color ?? "#0ea5e9" }}
+                      aria-hidden="true"
+                    />
+                  </span>
+                }
+              />
+              <EndpointCard
+                label="To category"
+                name={activeCategory.name}
+                color={activeCategory.color}
+                onClick={() => setCategoryPickerOpen(true)}
+                icon={
+                  <span
+                    className="flex size-11 items-center justify-center rounded-full bg-white"
+                    style={{ color: activeCategory.color }}
+                  >
+                    <CategoryIconGlyph
+                      icon={activeCategory.icon}
+                      className="size-5"
+                    />
+                  </span>
+                }
+              />
+            </>
+          )}
         </div>
 
         {subcategories.length > 0 ? (
@@ -342,7 +401,7 @@ export function CategoryExpenseDrawer({
             className="text-sm font-medium"
             style={{ color: accentColor }}
           >
-            Expense
+            {transactionLabel}
           </p>
           <p
             className="mt-1 min-h-[2.5rem] text-[1.75rem] font-semibold tabular-nums tracking-tight"
@@ -416,6 +475,10 @@ export function CategoryExpenseDrawer({
           onOpenChange={setDatePickerOpen}
           selectedDate={selectedDate}
           onSelect={setSelectedDate}
+          selectedRecurrence={selectedRecurrence}
+          onRecurrenceChange={setSelectedRecurrence}
+          selectedReminder={selectedReminder}
+          onReminderChange={setSelectedReminder}
         />
 
         <ExpenseCurrencyPickerDrawer

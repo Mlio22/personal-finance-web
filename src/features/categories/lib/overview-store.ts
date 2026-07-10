@@ -27,3 +27,16 @@ export function addOverviewExpense(amount: number): void {
     balance: current.balance - amount,
   };
 }
+
+export function addOverviewIncome(amount: number): void {
+  if (typeof window === "undefined" || amount <= 0) {
+    return;
+  }
+
+  const current = getClientOverview();
+  clientOverviewCache = {
+    ...current,
+    income: current.income + amount,
+    balance: current.balance + amount,
+  };
+}

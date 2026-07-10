@@ -11,11 +11,14 @@ import {
   CategoryExpenseDrawer,
   type CategoryExpenseConfirmPayload,
 } from "@/features/categories/components/category-expense-drawer";
+import { CategoryGridPlaceholder } from "@/features/categories/components/category-grid-placeholder";
 import { CategoryUsageDrawer } from "@/features/categories/components/category-usage-drawer";
 import { ExpenseDonutChart } from "@/features/categories/components/expense-donut-chart";
 import { useCategoriesSummary } from "@/features/categories/hooks/use-categories-summary";
 import { useCreateExpense } from "@/features/categories/hooks/use-create-expense";
+import { useCreateIncome } from "@/features/categories/hooks/use-create-income";
 import { useOverview } from "@/features/categories/hooks/use-overview";
+import { partitionCategoryGrid } from "@/features/categories/lib/category-grid-layout";
 import { resolveExpenseAccount } from "@/features/categories/lib/resolve-expense-account";
 import type {
   CategoryKind,
@@ -23,21 +26,6 @@ import type {
 } from "@/features/categories/types";
 import { useRegisterHeaderAction } from "@/components/layout/header-action-provider";
 import { cn } from "@/lib/utils";
-
-const MAIN_GRID_CAPACITY = 12;
-
-function partitionCategories(categories: CategorySummaryItem[]) {
-  const main = categories.slice(0, MAIN_GRID_CAPACITY);
-  const overflow = categories.slice(MAIN_GRID_CAPACITY);
-
-  return {
-    top: main.slice(0, 4),
-    middleLeft: [main[4], main[6]].filter(Boolean),
-    middleRight: [main[5], main[7]].filter(Boolean),
-    bottom: main.slice(8, 12),
-    overflow,
-  };
-}
 
 function getBottomCardPlacement(index: number) {
   return { gridColumnStart: index + 1, className: undefined };
@@ -82,12 +70,14 @@ export function CategoriesScreen({
     useCategoriesSummary();
   const { data: overviewData, isLoading: isOverviewLoading } = useOverview();
   const { mutate: createExpense } = useCreateExpense();
+  const { mutate: createIncome } = useCreateIncome();
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     initialCategoryId,
   );
-  const [expenseCategory, setExpenseCategory] =
+  const [transactionCategory, setTransactionCategory] =
     useState<CategorySummaryItem | null>(null);
-  const [expenseOpen, setExpenseOpen] = useState(false);
+  const [transactionKind, setTransactionKind] = useState<CategoryKind>("expense");
+  const [transactionOpen, setTransactionOpen] = useState(false);
   const [usageCategory, setUsageCategory] =
     useState<CategorySummaryItem | null>(null);
   const [usageOpen, setUsageOpen] = useState(false);
@@ -123,12 +113,20 @@ export function CategoriesScreen({
         (category.kind ?? "expense") === "expense",
     );
   }, [summaryData?.categories]);
+  const incomeCategories = useMemo(() => {
+    const all = summaryData?.categories ?? [];
+    return all.filter(
+      (category) =>
+        !(category.archived ?? false) &&
+        (category.kind ?? "expense") === "income",
+    );
+  }, [summaryData?.categories]);
 
   const handleToggleKind = useCallback(() => {
     setViewKind((current) => (current === "expense" ? "income" : "expense"));
     setSelectedCategoryId(null);
-    setExpenseOpen(false);
-    setExpenseCategory(null);
+    setTransactionOpen(false);
+    setTransactionCategory(null);
     setUsageOpen(false);
     setUsageCategory(null);
   }, []);
@@ -151,14 +149,11 @@ export function CategoriesScreen({
         return;
       }
 
+      const kind = category.kind ?? "expense";
       setSelectedCategoryId(categoryId);
-
-      if ((category.kind ?? "expense") !== "expense") {
-        return;
-      }
-
-      setExpenseCategory(category);
-      setExpenseOpen(true);
+      setTransactionKind(kind);
+      setTransactionCategory(category);
+      setTransactionOpen(true);
     },
     [categories],
   );
@@ -177,10 +172,10 @@ export function CategoriesScreen({
     [categories],
   );
 
-  const handleExpenseOpenChange = useCallback((open: boolean) => {
-    setExpenseOpen(open);
+  const handleTransactionOpenChange = useCallback((open: boolean) => {
+    setTransactionOpen(open);
     if (!open) {
-      setExpenseCategory(null);
+      setTransactionCategory(null);
     }
   }, []);
 
@@ -191,11 +186,16 @@ export function CategoriesScreen({
     }
   }, []);
 
-  const handleExpenseConfirm = useCallback(
+  const handleTransactionConfirm = useCallback(
     (payload: CategoryExpenseConfirmPayload) => {
+      if (transactionKind === "income") {
+        createIncome(payload);
+        return;
+      }
+
       createExpense(payload);
     },
-    [createExpense],
+    [createExpense, createIncome, transactionKind],
   );
 
   if (isEditMode) {
@@ -211,24 +211,33 @@ export function CategoriesScreen({
   }
 
   const { top, middleLeft, middleRight, bottom, overflow } =
-    partitionCategories(categories);
+    partitionCategoryGrid(categories);
 
   return (
     <>
       <div className="flex min-h-0 flex-1 flex-col gap-2 pb-1">
         <div className="grid min-h-0 flex-1 grid-cols-4 grid-rows-[auto_1fr_1fr_auto] gap-1">
-          {top.map((category, index) => (
-            <CategoryCard
-              key={category.id}
-              category={category}
-              density="edge"
-              highlighted={selectedCategoryId === category.id}
-              onSelect={handleCategorySelect}
-              onLongPress={handleCategoryLongPress}
-              className="row-start-1"
-              style={{ gridColumnStart: index + 1 }}
-            />
-          ))}
+          {top.map((category, index) =>
+            category ? (
+              <CategoryCard
+                key={category.id}
+                category={category}
+                density="edge"
+                highlighted={selectedCategoryId === category.id}
+                onSelect={handleCategorySelect}
+                onLongPress={handleCategoryLongPress}
+                className="row-start-1"
+                style={{ gridColumnStart: index + 1 }}
+              />
+            ) : (
+              <CategoryGridPlaceholder
+                key={`top-${index}`}
+                density="edge"
+                className="row-start-1"
+                style={{ gridColumnStart: index + 1 }}
+              />
+            ),
+          )}
 
           {middleLeft[0] ? (
             <CategoryCard
@@ -239,7 +248,12 @@ export function CategoriesScreen({
               onLongPress={handleCategoryLongPress}
               className="col-start-1 row-start-2 self-center"
             />
-          ) : null}
+          ) : (
+            <CategoryGridPlaceholder
+              density="flank"
+              className="col-start-1 row-start-2 self-center"
+            />
+          )}
 
           <div className="col-span-2 row-span-2 col-start-2 row-start-2 flex min-h-0 min-w-0 items-center justify-center">
             <ExpenseDonutChart
@@ -262,7 +276,12 @@ export function CategoriesScreen({
               onLongPress={handleCategoryLongPress}
               className="col-start-4 row-start-2 self-center"
             />
-          ) : null}
+          ) : (
+            <CategoryGridPlaceholder
+              density="flank"
+              className="col-start-4 row-start-2 self-center"
+            />
+          )}
 
           {middleLeft[1] ? (
             <CategoryCard
@@ -273,7 +292,12 @@ export function CategoriesScreen({
               onLongPress={handleCategoryLongPress}
               className="col-start-1 row-start-3 self-center"
             />
-          ) : null}
+          ) : (
+            <CategoryGridPlaceholder
+              density="flank"
+              className="col-start-1 row-start-3 self-center"
+            />
+          )}
 
           {middleRight[1] ? (
             <CategoryCard
@@ -284,12 +308,17 @@ export function CategoriesScreen({
               onLongPress={handleCategoryLongPress}
               className="col-start-4 row-start-3 self-center"
             />
-          ) : null}
+          ) : (
+            <CategoryGridPlaceholder
+              density="flank"
+              className="col-start-4 row-start-3 self-center"
+            />
+          )}
 
           {bottom.map((category, index) => {
             const placement = getBottomCardPlacement(index);
 
-            return (
+            return category ? (
               <CategoryCard
                 key={category.id}
                 category={category}
@@ -297,6 +326,13 @@ export function CategoriesScreen({
                 highlighted={selectedCategoryId === category.id}
                 onSelect={handleCategorySelect}
                 onLongPress={handleCategoryLongPress}
+                className={cn("row-start-4 self-center", placement.className)}
+                style={{ gridColumnStart: placement.gridColumnStart }}
+              />
+            ) : (
+              <CategoryGridPlaceholder
+                key={`bottom-${index}`}
+                density="edge"
                 className={cn("row-start-4 self-center", placement.className)}
                 style={{ gridColumnStart: placement.gridColumnStart }}
               />
@@ -321,13 +357,16 @@ export function CategoriesScreen({
       </div>
 
       <CategoryExpenseDrawer
-        open={expenseOpen}
-        onOpenChange={handleExpenseOpenChange}
-        category={expenseCategory}
+        open={transactionOpen}
+        onOpenChange={handleTransactionOpenChange}
+        category={transactionCategory}
         account={expenseAccount}
         accounts={spendableAccounts}
-        categories={expenseCategories}
-        onConfirm={handleExpenseConfirm}
+        categories={
+          transactionKind === "income" ? incomeCategories : expenseCategories
+        }
+        transactionKind={transactionKind}
+        onConfirm={handleTransactionConfirm}
       />
 
       <CategoryUsageDrawer
