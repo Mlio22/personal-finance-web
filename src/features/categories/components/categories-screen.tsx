@@ -26,11 +26,7 @@ function partitionCategories(categories: CategorySummaryItem[]) {
   };
 }
 
-function getBottomCardPlacement(index: number, total: number) {
-  if (total === 3 && index === 2) {
-    return { gridColumnStart: 3, className: "col-span-2" as const };
-  }
-
+function getBottomCardPlacement(index: number) {
   return { gridColumnStart: index + 1, className: undefined };
 }
 
@@ -117,7 +113,7 @@ function CategoriesGrid({
       ) : null}
 
       {bottom.map((category, index) => {
-        const placement = getBottomCardPlacement(index, bottom.length);
+        const placement = getBottomCardPlacement(index);
 
         return (
           <CategoryCard
@@ -155,11 +151,8 @@ function CategoriesSkeleton() {
       {Array.from({ length: 4 }).map((_, index) => (
         <div
           key={`bottom-${index}`}
-          className={cn(
-            "h-24 row-start-4 animate-pulse rounded-xl bg-muted/60",
-            index === 2 && "col-span-2 col-start-3",
-          )}
-          style={index < 2 ? { gridColumnStart: index + 1 } : undefined}
+          className="row-start-4 h-24 animate-pulse rounded-xl bg-muted/60"
+          style={{ gridColumnStart: index + 1 }}
         />
       ))}
     </div>

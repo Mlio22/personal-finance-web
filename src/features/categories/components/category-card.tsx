@@ -100,10 +100,7 @@ export function CategoryCard({
       <CategoryIcon
         icon={category.icon}
         color={category.color}
-        className={cn(
-          "flex shrink-0 items-center justify-center rounded-xl",
-          isEdge ? "size-10" : "size-12",
-        )}
+        className="flex size-10 shrink-0 items-center justify-center rounded-xl"
       />
 
       <span

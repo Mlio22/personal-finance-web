@@ -24,7 +24,7 @@ interface ExpenseDonutChartProps {
 
 const CHART_SIZE = 240;
 const OUTER_RADIUS = 112;
-const INNER_RADIUS = 72;
+const INNER_RADIUS = 90;
 const CENTER = CHART_SIZE / 2;
 
 function polarToCartesian(
@@ -147,7 +147,7 @@ export function ExpenseDonutChart({
               )}
               fill={segment.color}
               stroke="var(--background)"
-              strokeWidth={2.5}
+              strokeWidth={1.5}
               className={cn(
                 "cursor-pointer transition-opacity",
                 selectedCategoryId &&
