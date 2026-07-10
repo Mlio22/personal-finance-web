@@ -17,7 +17,10 @@ import { useCategoriesSummary } from "@/features/categories/hooks/use-categories
 import { useCreateExpense } from "@/features/categories/hooks/use-create-expense";
 import { useOverview } from "@/features/categories/hooks/use-overview";
 import { resolveExpenseAccount } from "@/features/categories/lib/resolve-expense-account";
-import type { CategorySummaryItem } from "@/features/categories/types";
+import type {
+  CategoryKind,
+  CategorySummaryItem,
+} from "@/features/categories/types";
 import { useRegisterHeaderAction } from "@/components/layout/header-action-provider";
 import { cn } from "@/lib/utils";
 
@@ -88,6 +91,7 @@ export function CategoriesScreen({
   const [usageCategory, setUsageCategory] =
     useState<CategorySummaryItem | null>(null);
   const [usageOpen, setUsageOpen] = useState(false);
+  const [viewKind, setViewKind] = useState<CategoryKind>("expense");
 
   const toggleEditMode = useCallback(() => {
     if (isEditMode) {
@@ -108,9 +112,26 @@ export function CategoriesScreen({
     return all.filter(
       (category) =>
         !(category.archived ?? false) &&
+        (category.kind ?? "expense") === viewKind,
+    );
+  }, [summaryData?.categories, viewKind]);
+  const expenseCategories = useMemo(() => {
+    const all = summaryData?.categories ?? [];
+    return all.filter(
+      (category) =>
+        !(category.archived ?? false) &&
         (category.kind ?? "expense") === "expense",
     );
   }, [summaryData?.categories]);
+
+  const handleToggleKind = useCallback(() => {
+    setViewKind((current) => (current === "expense" ? "income" : "expense"));
+    setSelectedCategoryId(null);
+    setExpenseOpen(false);
+    setExpenseCategory(null);
+    setUsageOpen(false);
+    setUsageCategory(null);
+  }, []);
   const expenseAccount = useMemo(
     () => resolveExpenseAccount(accounts, selectedAccount),
     [accounts, selectedAccount],
@@ -131,6 +152,11 @@ export function CategoriesScreen({
       }
 
       setSelectedCategoryId(categoryId);
+
+      if ((category.kind ?? "expense") !== "expense") {
+        return;
+      }
+
       setExpenseCategory(category);
       setExpenseOpen(true);
     },
@@ -220,8 +246,9 @@ export function CategoriesScreen({
               categories={categories}
               totalExpenses={overviewData?.expenses ?? 0}
               totalIncome={overviewData?.income ?? 0}
+              viewKind={viewKind}
               selectedCategoryId={selectedCategoryId}
-              onSegmentSelect={handleCategorySelect}
+              onToggleKind={handleToggleKind}
               className="aspect-square h-full w-full max-h-full max-w-full"
             />
           </div>
@@ -299,7 +326,7 @@ export function CategoriesScreen({
         category={expenseCategory}
         account={expenseAccount}
         accounts={spendableAccounts}
-        categories={categories}
+        categories={expenseCategories}
         onConfirm={handleExpenseConfirm}
       />
 

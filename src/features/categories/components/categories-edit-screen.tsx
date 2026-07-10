@@ -128,12 +128,15 @@ export function CategoriesEditScreen({
           <div className="col-span-2 row-span-2 col-start-2 row-start-2 flex min-h-0 min-w-0 items-center justify-center">
             <ExpenseDonutChart
               categories={categories}
-              totalExpenses={
-                activeKind === "expense" ? (overviewData?.expenses ?? 0) : 0
-              }
+              totalExpenses={overviewData?.expenses ?? 0}
               totalIncome={overviewData?.income ?? 0}
+              viewKind={activeKind}
               selectedCategoryId={selectedCategoryId}
-              onSegmentSelect={handleSelect}
+              onToggleKind={() =>
+                setActiveKind((current) =>
+                  current === "expense" ? "income" : "expense",
+                )
+              }
               className="aspect-square h-full w-full max-h-full max-w-full"
             />
           </div>

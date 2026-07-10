@@ -34,13 +34,13 @@ function createDailyBreakdown(): DailyBreakdownItem[] {
 
 export const MOCK_OVERVIEW: OverviewResponse = {
   balance: 738_474.5,
-  income: 9_135_189,
-  expenses: 8_396_715,
+  income: 9_249_626,
+  expenses: 7_063_945,
   dailyBreakdown: createDailyBreakdown(),
   averages: {
-    daily: 270_862,
-    weekly: 1_896_032,
-    monthly: 8_396_715,
+    daily: 227_869,
+    weekly: 1_595_083,
+    monthly: 7_063_945,
   },
   categoryBreakdown: [
     {

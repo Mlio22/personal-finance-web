@@ -1,8 +1,10 @@
 import {
   Apple,
+  Banknote,
   Camera,
   Candy,
   CircleDollarSign,
+  Coins,
   CupSoda,
   Ellipsis,
   Gamepad2,
@@ -10,6 +12,7 @@ import {
   HandCoins,
   HeartPulse,
   Home,
+  JapaneseYen,
   Music,
   Receipt,
   ShoppingBasket,
@@ -42,6 +45,9 @@ export const CATEGORY_ICONS: Record<string, LucideIcon> = {
   wine: Wine,
   music: Music,
   receipt: Receipt,
+  banknote: Banknote,
+  coins: Coins,
+  "japanese-yen": JapaneseYen,
 };
 
 export const CATEGORY_ICON_OPTIONS = Object.keys(CATEGORY_ICONS);
