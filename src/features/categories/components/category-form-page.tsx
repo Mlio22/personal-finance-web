@@ -76,14 +76,14 @@ export function CategoryFormPage({
     }
 
     syncCategoriesQuery();
-    router.push("/categories/edit");
+    router.push("/categories?edit=1");
   }
 
   function handleDelete() {
     if (!existingCategory) return;
     deleteCategoryFromMockCache(existingCategory.id);
     syncCategoriesQuery();
-    router.push("/categories/edit");
+    router.push("/categories?edit=1");
   }
 
   if (!ready) {
@@ -105,7 +105,7 @@ export function CategoryFormPage({
         <button
           type="button"
           className="text-sm font-medium text-[#c4b5fd]"
-          onClick={() => router.push("/categories/edit")}
+          onClick={() => router.push("/categories?edit=1")}
         >
           Back to edit categories
         </button>

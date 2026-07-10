@@ -30,7 +30,11 @@ function partitionCategories(categories: CategorySummaryItem[]) {
   };
 }
 
-export function CategoriesEditScreen() {
+export function CategoriesEditScreen({
+  onExit,
+}: {
+  onExit: () => void;
+}) {
   const router = useRouter();
   const { data: summaryData, isLoading: isSummaryLoading } =
     useCategoriesSummary();
@@ -83,7 +87,7 @@ export function CategoriesEditScreen() {
           size="icon"
           className="rounded-full"
           aria-label="Back"
-          onClick={() => router.push("/categories")}
+          onClick={onExit}
         >
           <ArrowLeft className="size-5" strokeWidth={1.75} aria-hidden="true" />
         </Button>

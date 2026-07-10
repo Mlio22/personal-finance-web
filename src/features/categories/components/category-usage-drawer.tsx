@@ -8,7 +8,6 @@ import {
   getCategoryBudgetFillPercent,
   hasCategoryBudget,
 } from "@/features/categories/lib/category-display";
-import { getCategorySubcategories } from "@/features/categories/lib/categories-store";
 import type { CategorySummaryItem } from "@/features/categories/types";
 import { usePeriod } from "@/features/period/context/period-provider";
 import { useTransactions } from "@/features/transactions/hooks/use-transactions";
@@ -52,13 +51,8 @@ function buildUsageBreakdown(
   }
 
   if (totals.size === 0 && category.spentAmount > 0) {
-    const fallback = getCategorySubcategories(
-      category.id,
-      category.name,
-      category.icon,
-    )[0];
     totals.set("fallback", {
-      name: fallback?.name ?? `${category.name} (other)`,
+      name: `${category.name} (other)`,
       amount: category.spentAmount,
     });
   }

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { AccountFilterProvider } from "@/features/accounts/context/account-filter-provider";
 import { PeriodProvider } from "@/features/period/context/period-provider";
 import { AppHeader } from "@/components/layout/app-header";
@@ -14,7 +15,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="mx-auto flex h-dvh w-full max-w-lg flex-col overflow-hidden bg-background">
             <OfflineIndicator />
             <InstallPrompt />
-            <AppHeader />
+            <Suspense fallback={<div className="h-14 border-b border-border/60" />}>
+              <AppHeader />
+            </Suspense>
             <main className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-4">
               {children}
             </main>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { CategorySummaryItem } from "@/features/categories/types";
 import { formatIdr } from "@/lib/format-currency";
 import { cn } from "@/lib/utils";
@@ -11,6 +11,7 @@ interface DonutSegment {
   value: number;
   startAngle: number;
   endAngle: number;
+  length: number;
 }
 
 interface ExpenseDonutChartProps {
@@ -25,7 +26,11 @@ interface ExpenseDonutChartProps {
 const CHART_SIZE = 240;
 const OUTER_RADIUS = 112;
 const INNER_RADIUS = 90;
+const RING_RADIUS = (OUTER_RADIUS + INNER_RADIUS) / 2;
+const STROKE_WIDTH = OUTER_RADIUS - INNER_RADIUS;
 const CENTER = CHART_SIZE / 2;
+const FULL_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
+const DRAW_DURATION_MS = 900;
 
 function polarToCartesian(
   centerX: number,
@@ -41,44 +46,29 @@ function polarToCartesian(
   };
 }
 
-function describeArc(
+function describeStrokeArc(
   x: number,
   y: number,
-  outerRadius: number,
-  innerRadius: number,
+  radius: number,
   startAngle: number,
   endAngle: number,
 ) {
-  const startOuter = polarToCartesian(x, y, outerRadius, startAngle);
-  const endOuter = polarToCartesian(x, y, outerRadius, endAngle);
-  const startInner = polarToCartesian(x, y, innerRadius, endAngle);
-  const endInner = polarToCartesian(x, y, innerRadius, startAngle);
+  const start = polarToCartesian(x, y, radius, startAngle);
+  const end = polarToCartesian(x, y, radius, endAngle);
   const largeArcFlag = endAngle - startAngle <= 180 ? 0 : 1;
 
   return [
     "M",
-    startOuter.x,
-    startOuter.y,
+    start.x,
+    start.y,
     "A",
-    outerRadius,
-    outerRadius,
+    radius,
+    radius,
     0,
     largeArcFlag,
     1,
-    endOuter.x,
-    endOuter.y,
-    "L",
-    startInner.x,
-    startInner.y,
-    "A",
-    innerRadius,
-    innerRadius,
-    0,
-    largeArcFlag,
-    0,
-    endInner.x,
-    endInner.y,
-    "Z",
+    end.x,
+    end.y,
   ].join(" ");
 }
 
@@ -90,6 +80,8 @@ export function ExpenseDonutChart({
   onSegmentSelect,
   className,
 }: ExpenseDonutChartProps) {
+  const [drawn, setDrawn] = useState(false);
+
   const segments = useMemo(() => {
     const spendingCategories = categories.filter(
       (category) => category.spentAmount > 0,
@@ -107,17 +99,29 @@ export function ExpenseDonutChart({
 
     return spendingCategories.map((category) => {
       const sweep = (category.spentAmount / totalSpent) * 360;
+      const length = (sweep / 360) * FULL_CIRCUMFERENCE;
       const segment: DonutSegment = {
         categoryId: category.id,
         color: category.color,
         value: category.spentAmount,
         startAngle: currentAngle,
         endAngle: currentAngle + sweep,
+        length,
       };
       currentAngle += sweep;
       return segment;
     });
   }, [categories]);
+
+  const segmentsKey = segments.map((segment) => segment.categoryId).join("|");
+
+  useEffect(() => {
+    setDrawn(false);
+    const frame = requestAnimationFrame(() => {
+      setDrawn(true);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [segmentsKey]);
 
   return (
     <div
@@ -134,26 +138,32 @@ export function ExpenseDonutChart({
         aria-label={`Expense breakdown chart, total expenses ${formatIdr(totalExpenses)}`}
       >
         {segments.length > 0 ? (
-          segments.map((segment) => (
+          segments.map((segment, index) => (
             <path
               key={segment.categoryId}
-              d={describeArc(
+              d={describeStrokeArc(
                 CENTER,
                 CENTER,
-                OUTER_RADIUS,
-                INNER_RADIUS,
+                RING_RADIUS,
                 segment.startAngle,
                 segment.endAngle,
               )}
-              fill={segment.color}
-              stroke="var(--background)"
-              strokeWidth={1.5}
+              fill="none"
+              stroke={segment.color}
+              strokeWidth={STROKE_WIDTH}
+              strokeLinecap="butt"
+              strokeDasharray={`${segment.length} ${FULL_CIRCUMFERENCE}`}
+              strokeDashoffset={drawn ? 0 : segment.length}
               className={cn(
-                "cursor-pointer transition-opacity",
+                "cursor-pointer transition-[stroke-dashoffset,opacity] ease-out",
                 selectedCategoryId &&
                   selectedCategoryId !== segment.categoryId &&
                   "opacity-35",
               )}
+              style={{
+                transitionDuration: `${DRAW_DURATION_MS}ms`,
+                transitionDelay: drawn ? `${index * 60}ms` : "0ms",
+              }}
               onClick={() => onSegmentSelect?.(segment.categoryId)}
             />
           ))
@@ -161,11 +171,14 @@ export function ExpenseDonutChart({
           <circle
             cx={CENTER}
             cy={CENTER}
-            r={OUTER_RADIUS}
+            r={RING_RADIUS}
             fill="none"
             stroke="currentColor"
-            strokeWidth={OUTER_RADIUS - INNER_RADIUS}
-            className="text-muted/40"
+            strokeWidth={STROKE_WIDTH}
+            strokeDasharray={FULL_CIRCUMFERENCE}
+            strokeDashoffset={drawn ? 0 : FULL_CIRCUMFERENCE}
+            className="text-muted/40 transition-[stroke-dashoffset] ease-out"
+            style={{ transitionDuration: `${DRAW_DURATION_MS}ms` }}
           />
         )}
       </svg>

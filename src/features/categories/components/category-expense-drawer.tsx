@@ -43,8 +43,8 @@ import { cn } from "@/lib/utils";
 export interface CategoryExpenseConfirmPayload {
   amount: number;
   notes: string;
-  subcategoryId: string;
-  subcategoryName: string;
+  subcategoryId?: string;
+  subcategoryName?: string;
   accountId: string;
   accountName: string;
   accountColor: string;
@@ -144,11 +144,7 @@ export function CategoryExpenseDrawer({
       return [];
     }
 
-    return getCategorySubcategories(
-      activeCategory.id,
-      activeCategory.name,
-      activeCategory.icon,
-    );
+    return getCategorySubcategories(activeCategory.id);
   }, [activeCategory]);
 
   const selectedSubcategory =
@@ -168,8 +164,7 @@ export function CategoryExpenseDrawer({
     setSelectedDate(startOfDay(new Date()));
     setSelectedCurrency(account.currency ?? "IDR");
     setSelectedSubcategoryId(
-      getCategorySubcategories(category.id, category.name, category.icon)[0]
-        ?.id ?? null,
+      getCategorySubcategories(category.id)[0]?.id ?? null,
     );
     setAccountPickerOpen(false);
     setCategoryPickerOpen(false);
@@ -215,7 +210,7 @@ export function CategoryExpenseDrawer({
       return;
     }
 
-    if (!activeCategory || !activeAccount || !selectedSubcategory) {
+    if (!activeCategory || !activeAccount) {
       return;
     }
 
@@ -227,8 +222,8 @@ export function CategoryExpenseDrawer({
     onConfirm?.({
       amount: evaluated,
       notes: notes.trim(),
-      subcategoryId: selectedSubcategory.id,
-      subcategoryName: selectedSubcategory.name,
+      subcategoryId: selectedSubcategory?.id,
+      subcategoryName: selectedSubcategory?.name,
       accountId: activeAccount.id,
       accountName: activeAccount.name,
       accountColor: activeAccount.color ?? "#14b8a6",
@@ -410,11 +405,7 @@ export function CategoryExpenseDrawer({
             );
             if (nextCategory) {
               setSelectedSubcategoryId(
-                getCategorySubcategories(
-                  nextCategory.id,
-                  nextCategory.name,
-                  nextCategory.icon,
-                )[0]?.id ?? null,
+                getCategorySubcategories(nextCategory.id)[0]?.id ?? null,
               );
             }
           }}

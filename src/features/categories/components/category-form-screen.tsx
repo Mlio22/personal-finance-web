@@ -10,9 +10,11 @@ import {
   Plus,
   X,
 } from "lucide-react";
-import { CategoryIcon } from "@/features/categories/components/category-icon";
+import {
+  CategoryIcon,
+  CategoryIconGlyph,
+} from "@/features/categories/components/category-icon";
 import { CategoryIconPicker } from "@/features/categories/components/category-icon-picker";
-import { CategoryIconGlyph } from "@/features/categories/components/category-icon";
 import { SubcategoryFormScreen } from "@/features/categories/components/subcategory-form-screen";
 import { createSubcategoryId } from "@/features/categories/lib/categories-store";
 import type {
@@ -153,11 +155,11 @@ export function CategoryFormScreen({
         )}
       </header>
 
-      <div className="flex flex-1 flex-col overflow-y-auto px-5 pb-10 pt-3">
-        <div className="mb-8 flex items-start justify-between gap-4">
+      <div className="flex flex-1 flex-col overflow-y-auto px-5 pb-10 pt-4">
+        <div className="mb-8 flex items-center gap-4 border-b border-border/40 pb-5">
           <div className="min-w-0 flex-1">
             {isCreate ? null : (
-              <p className="mb-1.5 text-[0.8125rem] font-medium text-muted-foreground">
+              <p className="mb-1 text-[0.8125rem] font-medium text-muted-foreground">
                 Name
               </p>
             )}
@@ -168,7 +170,9 @@ export function CategoryFormScreen({
               placeholder="Name"
               className={cn(
                 "w-full bg-transparent text-foreground outline-none placeholder:text-muted-foreground",
-                isCreate ? "text-base" : "text-2xl font-semibold",
+                isCreate
+                  ? "text-[1.0625rem] font-medium"
+                  : "text-2xl font-semibold",
               )}
               autoFocus={isCreate}
             />
@@ -177,58 +181,49 @@ export function CategoryFormScreen({
           <button
             type="button"
             onClick={() => setIconPickerOpen(true)}
-            className="shrink-0 rounded-2xl"
+            className="shrink-0 overflow-hidden rounded-2xl"
             aria-label="Change category icon"
           >
             <CategoryIcon
               icon={values.icon}
               color={values.color}
-              className="size-14 rounded-2xl"
+              className="size-[3.25rem] !rounded-2xl"
             />
           </button>
         </div>
 
-        {!isCreate ? (
-          <div className="mb-6 flex justify-end">
-            <Button
-              type="button"
-              size="sm"
-              className="rounded-full bg-[#c4b5fd] px-4 font-semibold text-[#1e1b4b] hover:bg-[#c4b5fd]/90 disabled:opacity-40"
-              disabled={!canSubmit}
-              onClick={handleDone}
-            >
-              Save
-            </Button>
-          </div>
-        ) : null}
-
-        <section className="mb-8">
-          <h2 className="mb-3 text-sm font-medium text-[#c4b5fd]">Settings</h2>
+        <section className="mb-2">
+          <h2 className="mb-1 text-sm font-medium text-[#c4b5fd]">Settings</h2>
           <button
             type="button"
             onClick={() => setCurrencyOpen(true)}
-            className="flex w-full items-center gap-3 rounded-xl py-2 text-left transition-colors hover:bg-muted/40"
+            className="flex w-full items-center gap-3.5 py-3.5 text-left transition-opacity hover:opacity-80"
           >
-            <span className="flex size-10 items-center justify-center rounded-full bg-muted">
-              <CircleDollarSign className="size-5" strokeWidth={1.75} />
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-border/70">
+              <CircleDollarSign
+                className="size-5 text-foreground"
+                strokeWidth={1.75}
+              />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block text-sm font-medium">Category currency</span>
-              <span className="block text-xs text-muted-foreground">
+              <span className="block text-[0.9375rem] font-medium">
+                Category currency
+              </span>
+              <span className="mt-0.5 block text-sm text-muted-foreground">
                 {getCurrencyLabel(values.currency)}
               </span>
             </span>
           </button>
         </section>
 
-        <div className="mb-6 border-t border-border/50" />
+        <div className="mb-5 border-t border-border/50" />
 
         <section className="mb-8">
-          <h2 className="mb-3 text-sm font-medium text-[#c4b5fd]">
+          <h2 className="mb-1 text-sm font-medium text-[#c4b5fd]">
             Subcategories
           </h2>
 
-          <div className="space-y-1">
+          <div>
             {values.subcategories.map((subcategory) => (
               <button
                 key={subcategory.id}
@@ -237,17 +232,17 @@ export function CategoryFormScreen({
                   setEditingSubcategory(subcategory);
                   setSubcategoryOpen(true);
                 }}
-                className="flex w-full items-center gap-3 rounded-xl px-1 py-3 text-left transition-colors hover:bg-muted/40"
+                className="flex w-full items-center gap-3.5 border-b border-border/30 py-3.5 text-left transition-opacity hover:opacity-80"
               >
                 <CategoryIconGlyph
                   icon={subcategory.icon}
-                  className="size-5 text-foreground"
+                  className="size-5 shrink-0 text-foreground"
                 />
-                <span className="min-w-0 flex-1 text-sm font-medium">
+                <span className="min-w-0 flex-1 text-[0.9375rem] font-medium">
                   {subcategory.name}
                 </span>
                 <MoreVertical
-                  className="size-4 text-muted-foreground"
+                  className="size-4 shrink-0 text-muted-foreground"
                   aria-hidden="true"
                 />
               </button>
@@ -259,9 +254,13 @@ export function CategoryFormScreen({
                 setEditingSubcategory(null);
                 setSubcategoryOpen(true);
               }}
-              className="flex w-full items-center gap-3 rounded-xl px-1 py-3 text-left text-sm font-medium transition-colors hover:bg-muted/40"
+              className="flex w-full items-center gap-3.5 py-3.5 text-left text-[0.9375rem] font-medium transition-opacity hover:opacity-80"
             >
-              <Plus className="size-5" strokeWidth={1.75} aria-hidden="true" />
+              <Plus
+                className="size-5 shrink-0"
+                strokeWidth={1.75}
+                aria-hidden="true"
+              />
               Add subcategory
             </button>
           </div>
@@ -269,10 +268,15 @@ export function CategoryFormScreen({
 
         {!isCreate ? (
           <>
-            <div className="mb-4 border-t border-border/50" />
-            <div className="flex items-center gap-3 py-2">
-              <Archive className="size-5 text-muted-foreground" />
-              <span className="flex-1 text-sm font-medium">Archive category</span>
+            <div className="mb-2 border-t border-border/50" />
+            <div className="flex items-center gap-3.5 py-3.5">
+              <Archive
+                className="size-5 shrink-0 text-muted-foreground"
+                strokeWidth={1.75}
+              />
+              <span className="flex-1 text-[0.9375rem] font-medium">
+                Archive category
+              </span>
               <Switch
                 checked={values.archived}
                 onCheckedChange={(checked) => updateField("archived", checked)}

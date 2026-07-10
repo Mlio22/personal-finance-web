@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAccountFilter } from "@/features/accounts/context/account-filter-provider";
 import { useAccounts } from "@/features/accounts/hooks/use-accounts";
 import { getAllAccounts } from "@/features/accounts/lib/account-store";
+import { CategoriesEditScreen } from "@/features/categories/components/categories-edit-screen";
 import { CategoryCard } from "@/features/categories/components/category-card";
 import {
   CategoryExpenseDrawer,
@@ -70,6 +71,8 @@ export function CategoriesScreen({
   initialCategoryId?: string | null;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isEditMode = searchParams.get("edit") === "1";
   const { accounts, selectedAccount } = useAccountFilter();
   const { data: accountsData } = useAccounts();
   const { data: summaryData, isLoading: isSummaryLoading } =
@@ -86,10 +89,18 @@ export function CategoriesScreen({
     useState<CategorySummaryItem | null>(null);
   const [usageOpen, setUsageOpen] = useState(false);
 
-  const openEditCategories = useCallback(() => {
-    router.push("/categories/edit");
+  const toggleEditMode = useCallback(() => {
+    if (isEditMode) {
+      router.push("/categories");
+      return;
+    }
+    router.push("/categories?edit=1");
+  }, [isEditMode, router]);
+  useRegisterHeaderAction("categories", toggleEditMode);
+
+  const exitEditMode = useCallback(() => {
+    router.push("/categories");
   }, [router]);
-  useRegisterHeaderAction("categories", openEditCategories);
 
   const isLoading = isSummaryLoading || isOverviewLoading;
   const categories = useMemo(() => {
@@ -160,6 +171,10 @@ export function CategoriesScreen({
     },
     [createExpense],
   );
+
+  if (isEditMode) {
+    return <CategoriesEditScreen onExit={exitEditMode} />;
+  }
 
   if (isLoading && categories.length === 0) {
     return (

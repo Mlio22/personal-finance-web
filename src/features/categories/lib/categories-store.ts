@@ -60,8 +60,6 @@ export function getClientSubcategories(
 
 export function getCategorySubcategories(
   categoryId: string,
-  categoryName: string,
-  categoryIcon: string,
 ): CategorySubcategory[] {
   if (typeof window !== "undefined") {
     const client = getClientSubcategories(categoryId);
@@ -70,11 +68,7 @@ export function getCategorySubcategories(
     }
   }
 
-  return (
-    MOCK_CATEGORY_SUBCATEGORIES[categoryId] ?? [
-      { id: categoryId, name: categoryName, icon: categoryIcon },
-    ]
-  );
+  return MOCK_CATEGORY_SUBCATEGORIES[categoryId] ?? [];
 }
 
 export type { CategorySubcategory };
