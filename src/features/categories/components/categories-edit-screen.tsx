@@ -14,7 +14,7 @@ import type {
   CategorySummaryItem,
 } from "@/features/categories/types";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+
 const MAIN_GRID_CAPACITY = 12;
 
 function partitionCategories(categories: CategorySummaryItem[]) {
