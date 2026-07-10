@@ -12,7 +12,17 @@ export type AccountIconKind =
   | "gold"
   | "sos"
   | "travel"
-  | "qurban";
+  | "qurban"
+  | "piggy"
+  | "briefcase"
+  | "bank"
+  | "coins"
+  | "credit-card"
+  | "gift"
+  | "calculator"
+  | "plant"
+  | "safe"
+  | "hand";
 
 export interface Account {
   id: string;
@@ -22,12 +32,36 @@ export interface Account {
   type: AccountType;
   color?: string;
   icon?: AccountIconKind;
+  description?: string;
+  creditLimit?: number;
+  includeInTotalBalance?: boolean;
   isSavingsGoal?: boolean;
   savingsTarget?: number;
   goalLabel?: string;
   sortOrder?: number;
   isDefault?: boolean;
   archived?: boolean;
+}
+
+export type AccountFormMode = "create" | "edit";
+
+export type NewAccountTypeOption = Extract<
+  AccountType,
+  "regular" | "debt" | "savings"
+>;
+
+export interface AccountFormValues {
+  name: string;
+  type: AccountType;
+  currency: string;
+  description: string;
+  balance: number;
+  creditLimit: number;
+  savingsTarget: number;
+  includeInTotalBalance: boolean;
+  archived: boolean;
+  color: string;
+  icon: AccountIconKind;
 }
 
 export interface AccountsTotals {

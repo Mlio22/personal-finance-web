@@ -2,6 +2,7 @@
 
 import type { Account } from "@/features/accounts/types";
 import { AccountAvatar } from "@/features/accounts/components/account-avatar";
+import { getAccountDescription } from "@/features/accounts/lib/account-store";
 import { formatMoney } from "@/lib/format-currency";
 import { cn } from "@/lib/utils";
 
@@ -13,13 +14,15 @@ interface AccountRowProps {
 
 export function AccountRow({ account, onSelect, className }: AccountRowProps) {
   const isZero = account.balance === 0;
+  const description = getAccountDescription(account);
+  const hasDescription = description.length > 0;
 
   return (
     <button
       type="button"
       onClick={() => onSelect?.(account)}
       className={cn(
-        "flex w-full items-center gap-3 px-1 py-2.5 text-left transition-colors hover:bg-muted/40",
+        "flex w-full items-start gap-3 px-1 py-2.5 text-left transition-colors hover:bg-muted/40",
         className,
       )}
     >
@@ -30,21 +33,27 @@ export function AccountRow({ account, onSelect, className }: AccountRowProps) {
         showStar={account.isDefault}
       />
 
-      <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-semibold text-foreground">
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold leading-snug text-foreground">
           {account.name}
-        </span>
-        <span
+        </p>
+        {hasDescription ? (
+          <p className="mt-px break-words text-xs leading-snug text-muted-foreground">
+            {description}
+          </p>
+        ) : null}
+        <p
           className={cn(
-            "mt-0.5 block text-sm tabular-nums",
+            "text-sm leading-snug tabular-nums",
+            hasDescription ? "mt-px" : "mt-0.5",
             isZero ? "text-muted-foreground" : "text-positive",
           )}
         >
           {formatMoney(account.balance, account.currency, {
             maximumFractionDigits: 2,
           })}
-        </span>
-      </span>
+        </p>
+      </div>
     </button>
   );
 }
