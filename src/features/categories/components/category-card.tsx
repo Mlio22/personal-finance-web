@@ -1,77 +1,117 @@
 "use client";
 
-import Link from "next/link";
-import { CategoryIcon } from "@/features/categories/components/category-icon";
-import { getCategoryRemainingDisplay } from "@/features/categories/lib/category-display";
+import type { CSSProperties } from "react";
+import { CategoryBudgetIcon } from "@/features/categories/components/category-budget-icon";
+import {
+  getCategoryRemainingDisplay,
+  hasCategoryBudget,
+} from "@/features/categories/lib/category-display";
+import {
+  CATEGORY_EDGE_SLOT_CLASS,
+  CATEGORY_FLANK_SLOT_CLASS,
+} from "@/features/categories/lib/category-grid-layout";
 import type { CategorySummaryItem } from "@/features/categories/types";
+import { useLongPress } from "@/hooks/use-long-press";
 import { formatIdr } from "@/lib/format-currency";
 import { cn } from "@/lib/utils";
 
+type CategoryCardDensity = "edge" | "flank";
+
 interface CategoryCardProps {
   category: CategorySummaryItem;
+  density?: CategoryCardDensity;
   highlighted?: boolean;
   onSelect?: (categoryId: string) => void;
+  onLongPress?: (categoryId: string) => void;
   className?: string;
+  style?: CSSProperties;
 }
 
 export function CategoryCard({
   category,
+  density = "flank",
   highlighted = false,
   onSelect,
+  onLongPress,
   className,
+  style,
 }: CategoryCardProps) {
-  const { displayAmount, isOverBudget, showHighlight } =
-    getCategoryRemainingDisplay(category.budgetedAmount, category.spentAmount);
+  const { isOverBudget } = getCategoryRemainingDisplay(
+    category.budgetedAmount,
+    category.spentAmount,
+  );
+  const hasBudget = hasCategoryBudget(category.budgetedAmount);
+  const isEdge = density === "edge";
+  const longPressHandlers = useLongPress({
+    onPress: () => onSelect?.(category.id),
+    onLongPress: onLongPress
+      ? () => onLongPress(category.id)
+      : undefined,
+  });
 
   return (
-    <Link
-      href={`/transactions?categoryId=${category.id}`}
-      onClick={() => onSelect?.(category.id)}
+    <button
+      type="button"
+      {...longPressHandlers}
       className={cn(
-        "flex min-w-0 flex-col items-center gap-1 rounded-xl px-1 py-2 text-center transition-colors",
-        highlighted && "bg-accent/60 ring-1 ring-border/80",
+        "flex min-w-0 flex-col items-center rounded-xl text-center transition-colors hover:bg-muted/40 select-none",
+        isEdge
+          ? cn("gap-0.5 px-0.5 py-1", CATEGORY_EDGE_SLOT_CLASS)
+          : cn(
+              "h-full justify-center gap-0.5 px-0.5 py-1",
+              CATEGORY_FLANK_SLOT_CLASS,
+            ),
+        highlighted && "bg-muted/60 ring-1 ring-border/70",
         className,
       )}
-      aria-label={`${category.name}, remaining ${formatIdr(displayAmount)}, spent ${formatIdr(category.spentAmount)}`}
+      style={style}
+      aria-label={`${category.name}, spent ${formatIdr(category.spentAmount)}, budgeted ${formatIdr(category.budgetedAmount)}. Tap to add expense, hold for usage.`}
     >
-      <span className="line-clamp-1 w-full text-[10px] font-medium leading-tight text-foreground">
+      <span
+        className={cn(
+          "line-clamp-1 w-full font-semibold leading-tight text-foreground",
+          isEdge ? "text-[11px]" : "text-xs",
+        )}
+      >
         {category.name}
       </span>
 
-      {showHighlight ? (
-        <span
-          className="rounded-full px-1.5 py-0.5 text-[9px] font-semibold leading-none text-background"
-          style={{ backgroundColor: category.color }}
-        >
-          {formatIdr(displayAmount)}
-        </span>
-      ) : (
-        <span className="text-[9px] font-semibold leading-none text-muted-foreground">
-          {formatIdr(displayAmount)}
-        </span>
-      )}
+      <span
+        className={cn(
+          "max-w-full truncate font-medium tabular-nums leading-none text-muted-foreground",
+          isEdge ? "text-[11px]" : "text-xs",
+        )}
+      >
+        {formatIdr(category.spentAmount)}
+      </span>
 
-      <CategoryIcon
+      <CategoryBudgetIcon
         icon={category.icon}
         color={category.color}
-        className="flex size-7 shrink-0 items-center justify-center rounded-full"
+        budgetedAmount={category.budgetedAmount}
+        spentAmount={category.spentAmount}
+        className={isEdge ? "size-12" : "size-14"}
+        glyphClassName={isEdge ? "size-5" : "size-6"}
       />
 
       <span
         className={cn(
-          "text-[9px] font-semibold leading-none",
-          category.spentAmount > 0 || isOverBudget
+          "max-w-full truncate font-semibold tabular-nums leading-none",
+          isEdge ? "text-[11px]" : "text-xs",
+          hasBudget || category.spentAmount > 0 || isOverBudget
             ? undefined
             : "text-muted-foreground",
         )}
         style={
-          category.spentAmount > 0 || isOverBudget
+          hasBudget || category.spentAmount > 0 || isOverBudget
             ? { color: category.color }
             : undefined
         }
       >
-        {formatIdr(category.spentAmount)}
+        {hasBudget
+          ? formatIdr(category.budgetedAmount)
+          : formatIdr(category.spentAmount)}
       </span>
-    </Link>
+    </button>
   );
 }

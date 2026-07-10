@@ -1,9 +1,9 @@
 import {
   BarChart3,
   Gauge,
-  Landmark,
   LayoutDashboard,
   LayoutList,
+  Pencil,
   PieChart,
   Plus,
   Search,
@@ -42,8 +42,8 @@ export const MAIN_TABS: MainTab[] = [
     href: "/categories",
     label: "Categories",
     icon: PieChart,
-    actionIcon: Landmark,
-    actionLabel: "Manage categories",
+    actionIcon: Pencil,
+    actionLabel: "Edit categories",
   },
   {
     id: "transactions",
@@ -72,5 +72,7 @@ export const MAIN_TABS: MainTab[] = [
 ];
 
 export function getTabByPathname(pathname: string): MainTab | undefined {
-  return MAIN_TABS.find((tab) => pathname === tab.href || pathname.startsWith(`${tab.href}/`));
+  return MAIN_TABS.find(
+    (tab) => pathname === tab.href || pathname.startsWith(`${tab.href}/`),
+  );
 }

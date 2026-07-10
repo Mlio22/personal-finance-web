@@ -1,31 +1,61 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useAccountFilter } from "@/features/accounts/context/account-filter-provider";
+import { useAccounts } from "@/features/accounts/hooks/use-accounts";
+import { getAllAccounts } from "@/features/accounts/lib/account-store";
+import { CategoriesEditScreen } from "@/features/categories/components/categories-edit-screen";
 import { CategoryCard } from "@/features/categories/components/category-card";
+import {
+  CategoryExpenseDrawer,
+  type CategoryExpenseConfirmPayload,
+} from "@/features/categories/components/category-expense-drawer";
+import { CategoryGridPlaceholder } from "@/features/categories/components/category-grid-placeholder";
+import { CategoryUsageDrawer } from "@/features/categories/components/category-usage-drawer";
 import { ExpenseDonutChart } from "@/features/categories/components/expense-donut-chart";
 import { useCategoriesSummary } from "@/features/categories/hooks/use-categories-summary";
+import { useCreateExpense } from "@/features/categories/hooks/use-create-expense";
+import { useCreateIncome } from "@/features/categories/hooks/use-create-income";
 import { useOverview } from "@/features/categories/hooks/use-overview";
+import {
+  CATEGORY_DONUT_CELL_CLASS,
+  CATEGORY_GRID_CLASS,
+  partitionCategoryGrid,
+} from "@/features/categories/lib/category-grid-layout";
+import { resolveExpenseAccount } from "@/features/categories/lib/resolve-expense-account";
+import type {
+  CategoryKind,
+  CategorySummaryItem,
+} from "@/features/categories/types";
+import { useRegisterHeaderAction } from "@/components/layout/header-action-provider";
+import { cn } from "@/lib/utils";
+
+function getBottomCardPlacement(index: number) {
+  return { gridColumnStart: index + 1, className: undefined };
+}
 
 function CategoriesSkeleton() {
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-4 gap-2">
-        {Array.from({ length: 4 }).map((_, index) => (
-          <div
-            key={`top-${index}`}
-            className="h-24 animate-pulse rounded-xl bg-muted/60"
-          />
-        ))}
-      </div>
-      <div className="mx-auto size-[220px] animate-pulse rounded-full bg-muted/60" />
-      <div className="grid grid-cols-3 gap-2">
-        {Array.from({ length: 3 }).map((_, index) => (
-          <div
-            key={`bottom-${index}`}
-            className="h-24 animate-pulse rounded-xl bg-muted/60"
-          />
-        ))}
-      </div>
+    <div className={CATEGORY_GRID_CLASS}>
+      {Array.from({ length: 4 }).map((_, index) => (
+        <div
+          key={`top-${index}`}
+          className="min-h-[7rem] animate-pulse rounded-xl bg-muted/60"
+        />
+      ))}
+      <div className="col-start-1 row-start-2 min-h-[7rem] animate-pulse rounded-xl bg-muted/60" />
+      <div className="col-span-2 row-span-2 col-start-2 row-start-2 aspect-square w-full animate-pulse rounded-full bg-muted/60" />
+      <div className="col-start-4 row-start-2 min-h-[7rem] animate-pulse rounded-xl bg-muted/60" />
+      <div className="col-start-1 row-start-3 min-h-[7rem] animate-pulse rounded-xl bg-muted/60" />
+      <div className="col-start-4 row-start-3 min-h-[7rem] animate-pulse rounded-xl bg-muted/60" />
+      {Array.from({ length: 4 }).map((_, index) => (
+        <div
+          key={`bottom-${index}`}
+          className="row-start-4 min-h-[7rem] animate-pulse rounded-xl bg-muted/60"
+          style={{ gridColumnStart: index + 1 }}
+        />
+      ))}
     </div>
   );
 }
@@ -35,99 +65,322 @@ export function CategoriesScreen({
 }: {
   initialCategoryId?: string | null;
 }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const isEditMode = searchParams.get("edit") === "1";
+  const { accounts, selectedAccount } = useAccountFilter();
+  const { data: accountsData } = useAccounts();
   const { data: summaryData, isLoading: isSummaryLoading } =
     useCategoriesSummary();
   const { data: overviewData, isLoading: isOverviewLoading } = useOverview();
+  const { mutate: createExpense } = useCreateExpense();
+  const { mutate: createIncome } = useCreateIncome();
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     initialCategoryId,
   );
+  const [transactionCategory, setTransactionCategory] =
+    useState<CategorySummaryItem | null>(null);
+  const [transactionKind, setTransactionKind] = useState<CategoryKind>("expense");
+  const [transactionOpen, setTransactionOpen] = useState(false);
+  const [usageCategory, setUsageCategory] =
+    useState<CategorySummaryItem | null>(null);
+  const [usageOpen, setUsageOpen] = useState(false);
+  const [viewKind, setViewKind] = useState<CategoryKind>("expense");
+
+  const toggleEditMode = useCallback(() => {
+    if (isEditMode) {
+      router.push("/categories");
+      return;
+    }
+    router.push("/categories?edit=1");
+  }, [isEditMode, router]);
+  useRegisterHeaderAction("categories", toggleEditMode);
+
+  const exitEditMode = useCallback(() => {
+    router.push("/categories");
+  }, [router]);
 
   const isLoading = isSummaryLoading || isOverviewLoading;
-  const categories = summaryData?.categories ?? [];
+  const categories = useMemo(() => {
+    const all = summaryData?.categories ?? [];
+    return all.filter(
+      (category) =>
+        !(category.archived ?? false) &&
+        (category.kind ?? "expense") === viewKind,
+    );
+  }, [summaryData?.categories, viewKind]);
+  const expenseCategories = useMemo(() => {
+    const all = summaryData?.categories ?? [];
+    return all.filter(
+      (category) =>
+        !(category.archived ?? false) &&
+        (category.kind ?? "expense") === "expense",
+    );
+  }, [summaryData?.categories]);
+  const incomeCategories = useMemo(() => {
+    const all = summaryData?.categories ?? [];
+    return all.filter(
+      (category) =>
+        !(category.archived ?? false) &&
+        (category.kind ?? "expense") === "income",
+    );
+  }, [summaryData?.categories]);
 
-  if (isLoading) {
-    return <CategoriesSkeleton />;
+  const handleToggleKind = useCallback(() => {
+    setViewKind((current) => (current === "expense" ? "income" : "expense"));
+    setSelectedCategoryId(null);
+    setTransactionOpen(false);
+    setTransactionCategory(null);
+    setUsageOpen(false);
+    setUsageCategory(null);
+  }, []);
+  const expenseAccount = useMemo(
+    () => resolveExpenseAccount(accounts, selectedAccount),
+    [accounts, selectedAccount],
+  );
+  const spendableAccounts = useMemo(() => {
+    if (!accountsData) {
+      return accounts;
+    }
+
+    return getAllAccounts(accountsData).filter((account) => !account.archived);
+  }, [accounts, accountsData]);
+
+  const handleCategorySelect = useCallback(
+    (categoryId: string) => {
+      const category = categories.find((item) => item.id === categoryId);
+      if (!category) {
+        return;
+      }
+
+      const kind = category.kind ?? "expense";
+      setSelectedCategoryId(categoryId);
+      setTransactionKind(kind);
+      setTransactionCategory(category);
+      setTransactionOpen(true);
+    },
+    [categories],
+  );
+
+  const handleCategoryLongPress = useCallback(
+    (categoryId: string) => {
+      const category = categories.find((item) => item.id === categoryId);
+      if (!category) {
+        return;
+      }
+
+      setSelectedCategoryId(categoryId);
+      setUsageCategory(category);
+      setUsageOpen(true);
+    },
+    [categories],
+  );
+
+  const handleTransactionOpenChange = useCallback((open: boolean) => {
+    setTransactionOpen(open);
+    if (!open) {
+      setTransactionCategory(null);
+    }
+  }, []);
+
+  const handleUsageOpenChange = useCallback((open: boolean) => {
+    setUsageOpen(open);
+    if (!open) {
+      setUsageCategory(null);
+    }
+  }, []);
+
+  const handleTransactionConfirm = useCallback(
+    (payload: CategoryExpenseConfirmPayload) => {
+      if (transactionKind === "income") {
+        createIncome(payload);
+        return;
+      }
+
+      createExpense(payload);
+    },
+    [createExpense, createIncome, transactionKind],
+  );
+
+  if (isEditMode) {
+    return <CategoriesEditScreen onExit={exitEditMode} />;
   }
 
-  const topRow = categories.slice(0, 4);
-  const leftColumn = [categories[4], categories[6]].filter(Boolean);
-  const rightColumn = [categories[5], categories[7]].filter(Boolean);
-  const bottomRow = categories.slice(8, 11);
+  if (isLoading && categories.length === 0) {
+    return (
+      <div className="flex min-h-0 flex-1 flex-col">
+        <CategoriesSkeleton />
+      </div>
+    );
+  }
+
+  const { top, middleLeft, middleRight, bottom, overflow } =
+    partitionCategoryGrid(categories);
 
   return (
-    <div className="pb-2">
-      <div className="grid grid-cols-4 gap-1.5">
-        {topRow.map((category) => (
-          <CategoryCard
-            key={category.id}
-            category={category}
-            highlighted={selectedCategoryId === category.id}
-            onSelect={setSelectedCategoryId}
-          />
-        ))}
+    <>
+      <div className="flex min-h-0 flex-1 flex-col gap-2 pb-1">
+        <div className={CATEGORY_GRID_CLASS}>
+          {top.map((category, index) =>
+            category ? (
+              <CategoryCard
+                key={category.id}
+                category={category}
+                density="edge"
+                highlighted={selectedCategoryId === category.id}
+                onSelect={handleCategorySelect}
+                onLongPress={handleCategoryLongPress}
+                className="row-start-1"
+                style={{ gridColumnStart: index + 1 }}
+              />
+            ) : (
+              <CategoryGridPlaceholder
+                key={`top-${index}`}
+                density="edge"
+                className="row-start-1"
+                style={{ gridColumnStart: index + 1 }}
+              />
+            ),
+          )}
 
-        {leftColumn[0] ? (
-          <CategoryCard
-            category={leftColumn[0]}
-            highlighted={selectedCategoryId === leftColumn[0].id}
-            onSelect={setSelectedCategoryId}
-            className="col-start-1 row-start-2 row-span-2 self-center"
-          />
-        ) : null}
+          {middleLeft[0] ? (
+            <CategoryCard
+              category={middleLeft[0]}
+              density="flank"
+              highlighted={selectedCategoryId === middleLeft[0].id}
+              onSelect={handleCategorySelect}
+              onLongPress={handleCategoryLongPress}
+              className="col-start-1 row-start-2 self-center"
+            />
+          ) : (
+            <CategoryGridPlaceholder
+              density="flank"
+              className="col-start-1 row-start-2 self-center"
+            />
+          )}
 
-        <div className="col-span-2 row-span-4 row-start-2 flex items-center justify-center">
-          <ExpenseDonutChart
-            categories={categories}
-            totalExpenses={overviewData?.expenses ?? 0}
-            totalIncome={overviewData?.income ?? 0}
-            selectedCategoryId={selectedCategoryId}
-            onSegmentSelect={setSelectedCategoryId}
-          />
+          <div className={CATEGORY_DONUT_CELL_CLASS}>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <ExpenseDonutChart
+                categories={categories}
+                totalExpenses={overviewData?.expenses ?? 0}
+                totalIncome={overviewData?.income ?? 0}
+                viewKind={viewKind}
+                selectedCategoryId={selectedCategoryId}
+                onToggleKind={handleToggleKind}
+                className="aspect-square size-full max-h-full max-w-full"
+              />
+            </div>
+          </div>
+
+          {middleRight[0] ? (
+            <CategoryCard
+              category={middleRight[0]}
+              density="flank"
+              highlighted={selectedCategoryId === middleRight[0].id}
+              onSelect={handleCategorySelect}
+              onLongPress={handleCategoryLongPress}
+              className="col-start-4 row-start-2 self-center"
+            />
+          ) : (
+            <CategoryGridPlaceholder
+              density="flank"
+              className="col-start-4 row-start-2 self-center"
+            />
+          )}
+
+          {middleLeft[1] ? (
+            <CategoryCard
+              category={middleLeft[1]}
+              density="flank"
+              highlighted={selectedCategoryId === middleLeft[1].id}
+              onSelect={handleCategorySelect}
+              onLongPress={handleCategoryLongPress}
+              className="col-start-1 row-start-3 self-center"
+            />
+          ) : (
+            <CategoryGridPlaceholder
+              density="flank"
+              className="col-start-1 row-start-3 self-center"
+            />
+          )}
+
+          {middleRight[1] ? (
+            <CategoryCard
+              category={middleRight[1]}
+              density="flank"
+              highlighted={selectedCategoryId === middleRight[1].id}
+              onSelect={handleCategorySelect}
+              onLongPress={handleCategoryLongPress}
+              className="col-start-4 row-start-3 self-center"
+            />
+          ) : (
+            <CategoryGridPlaceholder
+              density="flank"
+              className="col-start-4 row-start-3 self-center"
+            />
+          )}
+
+          {bottom.map((category, index) => {
+            const placement = getBottomCardPlacement(index);
+
+            return category ? (
+              <CategoryCard
+                key={category.id}
+                category={category}
+                density="edge"
+                highlighted={selectedCategoryId === category.id}
+                onSelect={handleCategorySelect}
+                onLongPress={handleCategoryLongPress}
+                className={cn("row-start-4 self-center", placement.className)}
+                style={{ gridColumnStart: placement.gridColumnStart }}
+              />
+            ) : (
+              <CategoryGridPlaceholder
+                key={`bottom-${index}`}
+                density="edge"
+                className={cn("row-start-4 self-center", placement.className)}
+                style={{ gridColumnStart: placement.gridColumnStart }}
+              />
+            );
+          })}
         </div>
 
-        {rightColumn[0] ? (
-          <CategoryCard
-            category={rightColumn[0]}
-            highlighted={selectedCategoryId === rightColumn[0].id}
-            onSelect={setSelectedCategoryId}
-            className="col-start-4 row-start-2 row-span-2 self-center"
-          />
+        {overflow.length > 0 ? (
+          <div className="grid shrink-0 grid-cols-4 gap-1">
+            {overflow.map((category) => (
+              <CategoryCard
+                key={category.id}
+                category={category}
+                density="edge"
+                highlighted={selectedCategoryId === category.id}
+                onSelect={handleCategorySelect}
+                onLongPress={handleCategoryLongPress}
+              />
+            ))}
+          </div>
         ) : null}
-
-        {leftColumn[1] ? (
-          <CategoryCard
-            category={leftColumn[1]}
-            highlighted={selectedCategoryId === leftColumn[1].id}
-            onSelect={setSelectedCategoryId}
-            className="col-start-1 row-start-4 row-span-2 self-center"
-          />
-        ) : null}
-
-        {rightColumn[1] ? (
-          <CategoryCard
-            category={rightColumn[1]}
-            highlighted={selectedCategoryId === rightColumn[1].id}
-            onSelect={setSelectedCategoryId}
-            className="col-start-4 row-start-4 row-span-2 self-center"
-          />
-        ) : null}
-
-        {bottomRow.map((category, index) => (
-          <CategoryCard
-            key={category.id}
-            category={category}
-            highlighted={selectedCategoryId === category.id}
-            onSelect={setSelectedCategoryId}
-            className={
-              index === 0
-                ? "col-start-1 row-start-6"
-                : index === 1
-                  ? "col-start-2 row-start-6"
-                  : "col-span-2 col-start-3 row-start-6"
-            }
-          />
-        ))}
       </div>
-    </div>
+
+      <CategoryExpenseDrawer
+        open={transactionOpen}
+        onOpenChange={handleTransactionOpenChange}
+        category={transactionCategory}
+        account={expenseAccount}
+        accounts={spendableAccounts}
+        categories={
+          transactionKind === "income" ? incomeCategories : expenseCategories
+        }
+        transactionKind={transactionKind}
+        onConfirm={handleTransactionConfirm}
+      />
+
+      <CategoryUsageDrawer
+        open={usageOpen}
+        onOpenChange={handleUsageOpenChange}
+        category={usageCategory}
+        totalExpenses={overviewData?.expenses ?? 0}
+      />
+    </>
   );
 }

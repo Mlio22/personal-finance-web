@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { AccountFilterSheet } from "@/features/accounts/components/account-filter-sheet";
 import { PeriodSelector } from "@/features/period/components/period-selector";
 import { UserSettingsDrawer } from "@/features/settings/components/user-settings-drawer";
@@ -17,6 +17,7 @@ const PERIOD_SELECTOR_TABS = new Set([
 
 export function AppHeader() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { invokeAction } = useHeaderAction();
   const currentTab = getTabByPathname(pathname);
   const ActionIcon = currentTab?.actionIcon;
@@ -25,12 +26,16 @@ export function AppHeader() {
     : false;
   const isBudgetTab = currentTab?.id === "budget";
   const isAccountsTab = currentTab?.id === "accounts";
+  const isCategoriesEdit =
+    pathname === "/categories" && searchParams.get("edit") === "1";
+
+  if (isCategoriesEdit) {
+    return null;
+  }
 
   return (
     <header className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-      <div
-        className={cnHeader(isAccountsTab)}
-      >
+      <div className={cnHeader(isAccountsTab)}>
         <UserSettingsDrawer />
 
         <AccountFilterSheet />

@@ -1,6 +1,4 @@
-import {
-  MOCK_CATEGORIES_SUMMARY,
-} from "@/features/categories/data/mock-categories-data";
+import { getClientCategoriesSummary } from "@/features/categories/lib/categories-store";
 import type { CategoriesSummaryResponse } from "@/features/categories/types";
 import { apiClient } from "@/lib/api-client";
 import { buildPeriodQueryString } from "@/lib/period-query-params";
@@ -20,6 +18,6 @@ export async function getCategoriesSummary({
       `/v1/categories/summary${buildPeriodQueryString(range, accountId)}`,
     );
   } catch {
-    return MOCK_CATEGORIES_SUMMARY;
+    return getClientCategoriesSummary();
   }
 }
