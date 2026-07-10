@@ -9,6 +9,7 @@ import {
   CategoryExpenseDrawer,
   type CategoryExpenseConfirmPayload,
 } from "@/features/categories/components/category-expense-drawer";
+import { CategoryUsageDrawer } from "@/features/categories/components/category-usage-drawer";
 import { ExpenseDonutChart } from "@/features/categories/components/expense-donut-chart";
 import { useCategoriesSummary } from "@/features/categories/hooks/use-categories-summary";
 import { useCreateExpense } from "@/features/categories/hooks/use-create-expense";
@@ -18,9 +19,6 @@ import type { CategorySummaryItem } from "@/features/categories/types";
 import { cn } from "@/lib/utils";
 
 const MAIN_GRID_CAPACITY = 12;
-
-// Header (3.5rem) + period selector (~3.25rem) + main padding (2rem) + bottom nav (4.5rem)
-const CATEGORIES_GRID_MIN_HEIGHT = "calc(100dvh - 13.75rem)";
 
 function partitionCategories(categories: CategorySummaryItem[]) {
   const main = categories.slice(0, MAIN_GRID_CAPACITY);
@@ -41,10 +39,7 @@ function getBottomCardPlacement(index: number) {
 
 function CategoriesSkeleton() {
   return (
-    <div
-      className="grid grid-cols-4 grid-rows-[auto_1fr_1fr_auto] gap-1"
-      style={{ minHeight: CATEGORIES_GRID_MIN_HEIGHT }}
-    >
+    <div className="grid min-h-0 flex-1 grid-cols-4 grid-rows-[auto_1fr_1fr_auto] gap-1">
       {Array.from({ length: 4 }).map((_, index) => (
         <div
           key={`top-${index}`}
@@ -84,6 +79,9 @@ export function CategoriesScreen({
   const [expenseCategory, setExpenseCategory] =
     useState<CategorySummaryItem | null>(null);
   const [expenseOpen, setExpenseOpen] = useState(false);
+  const [usageCategory, setUsageCategory] =
+    useState<CategorySummaryItem | null>(null);
+  const [usageOpen, setUsageOpen] = useState(false);
 
   const isLoading = isSummaryLoading || isOverviewLoading;
   const categories = useMemo(
@@ -116,10 +114,31 @@ export function CategoriesScreen({
     [categories],
   );
 
+  const handleCategoryLongPress = useCallback(
+    (categoryId: string) => {
+      const category = categories.find((item) => item.id === categoryId);
+      if (!category) {
+        return;
+      }
+
+      setSelectedCategoryId(categoryId);
+      setUsageCategory(category);
+      setUsageOpen(true);
+    },
+    [categories],
+  );
+
   const handleExpenseOpenChange = useCallback((open: boolean) => {
     setExpenseOpen(open);
     if (!open) {
       setExpenseCategory(null);
+    }
+  }, []);
+
+  const handleUsageOpenChange = useCallback((open: boolean) => {
+    setUsageOpen(open);
+    if (!open) {
+      setUsageCategory(null);
     }
   }, []);
 
@@ -131,7 +150,11 @@ export function CategoriesScreen({
   );
 
   if (isLoading && categories.length === 0) {
-    return <CategoriesSkeleton />;
+    return (
+      <div className="flex min-h-0 flex-1 flex-col">
+        <CategoriesSkeleton />
+      </div>
+    );
   }
 
   const { top, middleLeft, middleRight, bottom, overflow } =
@@ -139,11 +162,8 @@ export function CategoriesScreen({
 
   return (
     <>
-      <div className="space-y-2 pb-2">
-        <div
-          className="grid grid-cols-4 grid-rows-[auto_1fr_1fr_auto] gap-1"
-          style={{ minHeight: CATEGORIES_GRID_MIN_HEIGHT }}
-        >
+      <div className="flex min-h-0 flex-1 flex-col gap-2 pb-1">
+        <div className="grid min-h-0 flex-1 grid-cols-4 grid-rows-[auto_1fr_1fr_auto] gap-1">
           {top.map((category, index) => (
             <CategoryCard
               key={category.id}
@@ -151,6 +171,7 @@ export function CategoriesScreen({
               density="edge"
               highlighted={selectedCategoryId === category.id}
               onSelect={handleCategorySelect}
+              onLongPress={handleCategoryLongPress}
               className="row-start-1"
               style={{ gridColumnStart: index + 1 }}
             />
@@ -162,6 +183,7 @@ export function CategoriesScreen({
               density="flank"
               highlighted={selectedCategoryId === middleLeft[0].id}
               onSelect={handleCategorySelect}
+              onLongPress={handleCategoryLongPress}
               className="col-start-1 row-start-2 self-center"
             />
           ) : null}
@@ -183,6 +205,7 @@ export function CategoriesScreen({
               density="flank"
               highlighted={selectedCategoryId === middleRight[0].id}
               onSelect={handleCategorySelect}
+              onLongPress={handleCategoryLongPress}
               className="col-start-4 row-start-2 self-center"
             />
           ) : null}
@@ -193,6 +216,7 @@ export function CategoriesScreen({
               density="flank"
               highlighted={selectedCategoryId === middleLeft[1].id}
               onSelect={handleCategorySelect}
+              onLongPress={handleCategoryLongPress}
               className="col-start-1 row-start-3 self-center"
             />
           ) : null}
@@ -203,6 +227,7 @@ export function CategoriesScreen({
               density="flank"
               highlighted={selectedCategoryId === middleRight[1].id}
               onSelect={handleCategorySelect}
+              onLongPress={handleCategoryLongPress}
               className="col-start-4 row-start-3 self-center"
             />
           ) : null}
@@ -217,6 +242,7 @@ export function CategoriesScreen({
                 density="edge"
                 highlighted={selectedCategoryId === category.id}
                 onSelect={handleCategorySelect}
+                onLongPress={handleCategoryLongPress}
                 className={cn("row-start-4 self-center", placement.className)}
                 style={{ gridColumnStart: placement.gridColumnStart }}
               />
@@ -225,7 +251,7 @@ export function CategoriesScreen({
         </div>
 
         {overflow.length > 0 ? (
-          <div className="grid grid-cols-4 gap-1">
+          <div className="grid shrink-0 grid-cols-4 gap-1">
             {overflow.map((category) => (
               <CategoryCard
                 key={category.id}
@@ -233,6 +259,7 @@ export function CategoriesScreen({
                 density="edge"
                 highlighted={selectedCategoryId === category.id}
                 onSelect={handleCategorySelect}
+                onLongPress={handleCategoryLongPress}
               />
             ))}
           </div>
@@ -247,6 +274,13 @@ export function CategoriesScreen({
         accounts={spendableAccounts}
         categories={categories}
         onConfirm={handleExpenseConfirm}
+      />
+
+      <CategoryUsageDrawer
+        open={usageOpen}
+        onOpenChange={handleUsageOpenChange}
+        category={usageCategory}
+        totalExpenses={overviewData?.expenses ?? 0}
       />
     </>
   );

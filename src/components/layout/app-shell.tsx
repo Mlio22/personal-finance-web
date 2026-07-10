@@ -11,13 +11,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <AccountFilterProvider>
       <PeriodProvider>
         <HeaderActionProvider>
-        <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col bg-background">
-          <OfflineIndicator />
-          <InstallPrompt />
-          <AppHeader />
-          <main className="flex-1 overflow-y-auto px-4 py-4">{children}</main>
-          <BottomNav />
-        </div>
+          <div className="mx-auto flex h-dvh w-full max-w-lg flex-col overflow-hidden bg-background">
+            <OfflineIndicator />
+            <InstallPrompt />
+            <AppHeader />
+            <main className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-4">
+              {children}
+            </main>
+            <BottomNav />
+          </div>
         </HeaderActionProvider>
       </PeriodProvider>
     </AccountFilterProvider>

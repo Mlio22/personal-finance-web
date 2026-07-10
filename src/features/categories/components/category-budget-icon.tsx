@@ -13,6 +13,7 @@ interface CategoryBudgetIconProps {
   budgetedAmount: number;
   spentAmount: number;
   className?: string;
+  glyphClassName?: string;
 }
 
 export function CategoryBudgetIcon({
@@ -21,6 +22,7 @@ export function CategoryBudgetIcon({
   budgetedAmount,
   spentAmount,
   className,
+  glyphClassName,
 }: CategoryBudgetIconProps) {
   const hasBudget = hasCategoryBudget(budgetedAmount);
   const fillPercent = getCategoryBudgetFillPercent(
@@ -33,7 +35,7 @@ export function CategoryBudgetIcon({
   return (
     <span
       className={cn(
-        "relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full border-2",
+        "relative flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-full border-[2.5px]",
         className,
       )}
       style={{
@@ -54,7 +56,7 @@ export function CategoryBudgetIcon({
 
       <CategoryIconGlyph
         icon={icon}
-        className="relative z-10 size-[1.125rem] text-white"
+        className={cn("relative z-10 size-6 text-white", glyphClassName)}
       />
     </span>
   );
