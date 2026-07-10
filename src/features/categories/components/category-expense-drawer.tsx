@@ -30,7 +30,7 @@ import {
 import {
   getCategorySubcategories,
   type CategorySubcategory,
-} from "@/features/categories/data/mock-category-subcategories";
+} from "@/features/categories/lib/categories-store";
 import type { CategorySummaryItem } from "@/features/categories/types";
 import { Input } from "@/components/ui/input";
 import {

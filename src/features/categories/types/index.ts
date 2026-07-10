@@ -5,6 +5,28 @@ export interface CategorySummaryItem {
   color: string;
   budgetedAmount: number;
   spentAmount: number;
+  kind?: "expense" | "income";
+  currency?: string;
+  archived?: boolean;
+}
+
+export type CategoryFormMode = "create" | "edit";
+export type CategoryKind = "expense" | "income";
+
+export interface CategorySubcategoryFormValue {
+  id: string;
+  name: string;
+  icon: string;
+}
+
+export interface CategoryFormValues {
+  name: string;
+  icon: string;
+  color: string;
+  kind: CategoryKind;
+  currency: string;
+  archived: boolean;
+  subcategories: CategorySubcategoryFormValue[];
 }
 
 export interface CategoriesSummaryResponse {

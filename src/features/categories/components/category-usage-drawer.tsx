@@ -8,7 +8,7 @@ import {
   getCategoryBudgetFillPercent,
   hasCategoryBudget,
 } from "@/features/categories/lib/category-display";
-import { getCategorySubcategories } from "@/features/categories/data/mock-category-subcategories";
+import { getCategorySubcategories } from "@/features/categories/lib/categories-store";
 import type { CategorySummaryItem } from "@/features/categories/types";
 import { usePeriod } from "@/features/period/context/period-provider";
 import { useTransactions } from "@/features/transactions/hooks/use-transactions";
@@ -262,7 +262,12 @@ export function CategoryUsageDrawer({
               <UsageAction
                 label="Edit"
                 icon={<Pencil className="size-5" strokeWidth={1.75} />}
-                disabled
+                onClick={() => {
+                  onOpenChange(false);
+                  router.push(
+                    `/categories/${encodeURIComponent(activeCategory.id)}/edit`,
+                  );
+                }}
               />
               <UsageAction
                 label="Budget"

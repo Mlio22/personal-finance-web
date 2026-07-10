@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useAccountFilter } from "@/features/accounts/context/account-filter-provider";
 import { useAccounts } from "@/features/accounts/hooks/use-accounts";
 import { getAllAccounts } from "@/features/accounts/lib/account-store";
@@ -16,6 +17,7 @@ import { useCreateExpense } from "@/features/categories/hooks/use-create-expense
 import { useOverview } from "@/features/categories/hooks/use-overview";
 import { resolveExpenseAccount } from "@/features/categories/lib/resolve-expense-account";
 import type { CategorySummaryItem } from "@/features/categories/types";
+import { useRegisterHeaderAction } from "@/components/layout/header-action-provider";
 import { cn } from "@/lib/utils";
 
 const MAIN_GRID_CAPACITY = 12;
@@ -67,6 +69,7 @@ export function CategoriesScreen({
 }: {
   initialCategoryId?: string | null;
 }) {
+  const router = useRouter();
   const { accounts, selectedAccount } = useAccountFilter();
   const { data: accountsData } = useAccounts();
   const { data: summaryData, isLoading: isSummaryLoading } =
@@ -83,11 +86,20 @@ export function CategoriesScreen({
     useState<CategorySummaryItem | null>(null);
   const [usageOpen, setUsageOpen] = useState(false);
 
+  const openEditCategories = useCallback(() => {
+    router.push("/categories/edit");
+  }, [router]);
+  useRegisterHeaderAction("categories", openEditCategories);
+
   const isLoading = isSummaryLoading || isOverviewLoading;
-  const categories = useMemo(
-    () => summaryData?.categories ?? [],
-    [summaryData?.categories],
-  );
+  const categories = useMemo(() => {
+    const all = summaryData?.categories ?? [];
+    return all.filter(
+      (category) =>
+        !(category.archived ?? false) &&
+        (category.kind ?? "expense") === "expense",
+    );
+  }, [summaryData?.categories]);
   const expenseAccount = useMemo(
     () => resolveExpenseAccount(accounts, selectedAccount),
     [accounts, selectedAccount],

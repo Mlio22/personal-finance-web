@@ -25,6 +25,11 @@ export function AppHeader() {
     : false;
   const isBudgetTab = currentTab?.id === "budget";
   const isAccountsTab = currentTab?.id === "accounts";
+  const isCategoriesEdit = pathname === "/categories/edit";
+
+  if (isCategoriesEdit) {
+    return null;
+  }
 
   return (
     <header className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
