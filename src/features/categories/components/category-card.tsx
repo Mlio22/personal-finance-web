@@ -1,7 +1,6 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import Link from "next/link";
 import { CategoryIcon } from "@/features/categories/components/category-icon";
 import { getCategoryRemainingDisplay } from "@/features/categories/lib/category-display";
 import type { CategorySummaryItem } from "@/features/categories/types";
@@ -52,8 +51,8 @@ export function CategoryCard({
   const isEdge = density === "edge";
 
   return (
-    <Link
-      href={`/transactions?categoryId=${category.id}`}
+    <button
+      type="button"
       onClick={() => onSelect?.(category.id)}
       className={cn(
         "flex min-w-0 flex-col items-center rounded-xl text-center transition-colors hover:bg-muted/40",
@@ -119,6 +118,6 @@ export function CategoryCard({
       >
         {formatCompactIdr(category.spentAmount)}
       </span>
-    </Link>
+    </button>
   );
 }
