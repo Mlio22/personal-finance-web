@@ -58,8 +58,8 @@ export function CategoryCard({
       className={cn(
         "flex min-w-0 flex-col items-center rounded-xl text-center transition-colors hover:bg-muted/40",
         isEdge
-          ? "gap-1.5 px-1 py-2"
-          : "h-full justify-center gap-2 px-1.5 py-3",
+          ? "gap-1 px-0.5 py-1"
+          : "h-full justify-center gap-1 px-0.5 py-1.5",
         highlighted && "bg-muted/60 ring-1 ring-border/70",
         className,
       )}
@@ -102,7 +102,7 @@ export function CategoryCard({
         color={category.color}
         className={cn(
           "flex shrink-0 items-center justify-center rounded-xl",
-          isEdge ? "size-8" : "size-10",
+          isEdge ? "size-10" : "size-12",
         )}
       />
 

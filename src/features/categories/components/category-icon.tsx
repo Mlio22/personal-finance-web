@@ -40,7 +40,7 @@ export function CategoryIcon({ icon, color, className }: CategoryIconProps) {
       style={{ backgroundColor: color }}
       aria-hidden="true"
     >
-      <Icon className="size-4 text-white" strokeWidth={1.75} />
+      <Icon className="size-5 text-white" strokeWidth={1.75} />
     </span>
   );
 }

@@ -50,7 +50,7 @@ function CategoriesGrid({
 
   return (
     <div
-      className="grid grid-cols-4 grid-rows-[auto_1fr_1fr_auto] gap-x-2 gap-y-3"
+      className="grid grid-cols-4 grid-rows-[auto_1fr_1fr_auto] gap-1"
       style={{ minHeight: CATEGORIES_GRID_MIN_HEIGHT }}
     >
       {top.map((category, index) => (
@@ -75,7 +75,7 @@ function CategoriesGrid({
         />
       ) : null}
 
-      <div className="col-span-2 row-span-2 col-start-2 row-start-2 flex min-h-0 min-w-0 items-center justify-center px-1">
+      <div className="col-span-2 row-span-2 col-start-2 row-start-2 flex min-h-0 min-w-0 items-center justify-center">
         <ExpenseDonutChart
           categories={categories}
           totalExpenses={overviewData?.expenses ?? 0}
@@ -138,7 +138,7 @@ function CategoriesGrid({
 function CategoriesSkeleton() {
   return (
     <div
-      className="grid grid-cols-4 grid-rows-[auto_1fr_1fr_auto] gap-x-2 gap-y-3"
+      className="grid grid-cols-4 grid-rows-[auto_1fr_1fr_auto] gap-1"
       style={{ minHeight: CATEGORIES_GRID_MIN_HEIGHT }}
     >
       {Array.from({ length: 4 }).map((_, index) => (
@@ -188,7 +188,7 @@ export function CategoriesScreen({
   const overflow = categories.slice(MAIN_GRID_CAPACITY);
 
   return (
-    <div className="space-y-4 pb-2">
+    <div className="space-y-2 pb-2">
       <CategoriesGrid
         categories={categories}
         overviewData={overviewData}
@@ -197,7 +197,7 @@ export function CategoriesScreen({
       />
 
       {overflow.length > 0 ? (
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-4 gap-1">
           {overflow.map((category) => (
             <CategoryCard
               key={category.id}
