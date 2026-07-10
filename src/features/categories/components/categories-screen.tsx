@@ -2,12 +2,16 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { useAccountFilter } from "@/features/accounts/context/account-filter-provider";
+import { useAccounts } from "@/features/accounts/hooks/use-accounts";
+import { getAllAccounts } from "@/features/accounts/lib/account-store";
 import { CategoryCard } from "@/features/categories/components/category-card";
 import {
   CategoryExpenseDrawer,
+  type CategoryExpenseConfirmPayload,
 } from "@/features/categories/components/category-expense-drawer";
 import { ExpenseDonutChart } from "@/features/categories/components/expense-donut-chart";
 import { useCategoriesSummary } from "@/features/categories/hooks/use-categories-summary";
+import { useCreateExpense } from "@/features/categories/hooks/use-create-expense";
 import { useOverview } from "@/features/categories/hooks/use-overview";
 import { resolveExpenseAccount } from "@/features/categories/lib/resolve-expense-account";
 import type { CategorySummaryItem } from "@/features/categories/types";
@@ -69,9 +73,11 @@ export function CategoriesScreen({
   initialCategoryId?: string | null;
 }) {
   const { accounts, selectedAccount } = useAccountFilter();
+  const { data: accountsData } = useAccounts();
   const { data: summaryData, isLoading: isSummaryLoading } =
     useCategoriesSummary();
   const { data: overviewData, isLoading: isOverviewLoading } = useOverview();
+  const { mutate: createExpense } = useCreateExpense();
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     initialCategoryId,
   );
@@ -88,6 +94,13 @@ export function CategoriesScreen({
     () => resolveExpenseAccount(accounts, selectedAccount),
     [accounts, selectedAccount],
   );
+  const spendableAccounts = useMemo(() => {
+    if (!accountsData) {
+      return accounts;
+    }
+
+    return getAllAccounts(accountsData).filter((account) => !account.archived);
+  }, [accounts, accountsData]);
 
   const handleCategorySelect = useCallback(
     (categoryId: string) => {
@@ -110,9 +123,12 @@ export function CategoriesScreen({
     }
   }, []);
 
-  const handleExpenseConfirm = useCallback(() => {
-    // Transaction create API is not wired yet — drawer confirms the entry flow.
-  }, []);
+  const handleExpenseConfirm = useCallback(
+    (payload: CategoryExpenseConfirmPayload) => {
+      createExpense(payload);
+    },
+    [createExpense],
+  );
 
   if (isLoading && categories.length === 0) {
     return <CategoriesSkeleton />;
@@ -228,6 +244,8 @@ export function CategoriesScreen({
         onOpenChange={handleExpenseOpenChange}
         category={expenseCategory}
         account={expenseAccount}
+        accounts={spendableAccounts}
+        categories={categories}
         onConfirm={handleExpenseConfirm}
       />
     </>

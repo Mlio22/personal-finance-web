@@ -187,6 +187,23 @@ export function upsertAccountInMockCache(account: Account): AccountsResponse {
   return clientMockCache;
 }
 
+export function adjustAccountBalanceInMockCache(
+  accountId: string,
+  delta: number,
+): AccountsResponse | null {
+  const current = getClientMockAccountsResponse();
+  const account = findAccountById(current, accountId);
+
+  if (!account) {
+    return null;
+  }
+
+  return upsertAccountInMockCache({
+    ...account,
+    balance: account.balance + delta,
+  });
+}
+
 export function deleteAccountFromMockCache(accountId: string): AccountsResponse {
   const current = getClientMockAccountsResponse();
 

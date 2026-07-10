@@ -1,3 +1,4 @@
+import { getClientTransactions } from "@/features/transactions/lib/transaction-store";
 import type { TransactionItem, TransactionsResponse } from "@/features/transactions/types";
 
 const MOCK_TRANSACTIONS: TransactionItem[] = [
@@ -173,6 +174,10 @@ function isWithinPeriod(
   return true;
 }
 
+function getAllMockTransactions(): TransactionItem[] {
+  return [...getClientTransactions(), ...MOCK_TRANSACTIONS];
+}
+
 export function buildMockTransactionsResponse(options?: {
   periodStart?: Date;
   periodEnd?: Date;
@@ -180,7 +185,7 @@ export function buildMockTransactionsResponse(options?: {
   categoryId?: string;
   endingBalance?: number | null;
 }): TransactionsResponse {
-  let filtered = [...MOCK_TRANSACTIONS];
+  let filtered = getAllMockTransactions();
 
   if (options?.periodStart || options?.periodEnd) {
     filtered = filtered.filter((tx) =>
