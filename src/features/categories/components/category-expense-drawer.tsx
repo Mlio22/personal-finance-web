@@ -2,7 +2,9 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import type { Account } from "@/features/accounts/types";
-import { AccountAvatar } from "@/features/accounts/components/account-avatar";
+import {
+  ACCOUNT_ICON_MAP,
+} from "@/features/accounts/components/account-avatar";
 import {
   appendDecimal,
   appendDigit,
@@ -18,7 +20,7 @@ import {
 } from "@/components/amount-input/amount-expression";
 import { type AmountKeypadAction } from "@/components/amount-input/amount-keypad";
 import { ExpenseAmountKeypad } from "@/components/amount-input/expense-amount-keypad";
-import { CategoryIcon } from "@/features/categories/components/category-icon";
+import { CategoryIconGlyph } from "@/features/categories/components/category-icon";
 import {
   ExpenseAccountPickerDrawer,
   ExpenseCategoryPickerDrawer,
@@ -115,6 +117,12 @@ export function CategoryExpenseDrawer({
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [currencyPickerOpen, setCurrencyPickerOpen] = useState(false);
 
+  const nestedPickerOpen =
+    accountPickerOpen ||
+    categoryPickerOpen ||
+    datePickerOpen ||
+    currencyPickerOpen;
+
   const activeAccount = useMemo(() => {
     if (selectedAccountId) {
       return accounts.find((item) => item.id === selectedAccountId) ?? account;
@@ -177,6 +185,15 @@ export function CategoryExpenseDrawer({
   const pendingOperation = hasPendingOperation(expression);
   const accentColor = activeCategory?.color ?? "#a855f7";
 
+  function handleParentOpenChange(nextOpen: boolean) {
+    // Nested pickers must close first — never dismiss the transaction modal
+    // while a child sheet is open (vaul can bubble dismiss events).
+    if (!nextOpen && nestedPickerOpen) {
+      return;
+    }
+    onOpenChange(nextOpen);
+  }
+
   function applyAction(action: AmountKeypadAction) {
     setExpression((current) => {
       switch (action.kind) {
@@ -229,172 +246,195 @@ export function CategoryExpenseDrawer({
     return null;
   }
 
+  const AccountIcon =
+    activeAccount.icon && ACCOUNT_ICON_MAP[activeAccount.icon]
+      ? ACCOUNT_ICON_MAP[activeAccount.icon]
+      : ACCOUNT_ICON_MAP.wallet;
+
   return (
-    <>
-      <Drawer open={open} onOpenChange={onOpenChange}>
-        <DrawerContent className="mx-auto max-h-[92dvh] max-w-lg gap-0 overflow-y-auto rounded-t-[1.75rem] border-0 bg-[#1c1c1e] px-0 pb-[env(safe-area-inset-bottom)] [&>div:first-child]:mt-2.5 [&>div:first-child]:h-1 [&>div:first-child]:w-10 [&>div:first-child]:bg-[#3a3a3c]">
-          <DrawerTitle className="sr-only">
-            Add expense to {activeCategory.name}
-          </DrawerTitle>
+    <Drawer
+      open={open}
+      onOpenChange={handleParentOpenChange}
+      dismissible={!nestedPickerOpen}
+    >
+      <DrawerContent className="mx-auto max-h-[92dvh] max-w-lg gap-0 overflow-y-auto rounded-t-[1.75rem] border-0 bg-[#1c1c1e] px-0 pb-[env(safe-area-inset-bottom)] [&>div:first-child]:mt-2.5 [&>div:first-child]:h-1 [&>div:first-child]:w-10 [&>div:first-child]:bg-[#3a3a3c]">
+        <DrawerTitle className="sr-only">
+          Add expense to {activeCategory.name}
+        </DrawerTitle>
 
-          <div className="grid grid-cols-2 gap-2 px-4 pb-3 pt-2">
-            <EndpointCard
-              label="From account"
-              name={activeAccount.name}
-              color={activeAccount.color ?? "#0ea5e9"}
-              onClick={() => setAccountPickerOpen(true)}
-              icon={
-                <AccountAvatar
-                  name={activeAccount.name}
-                  color={activeAccount.color}
-                  icon={activeAccount.icon}
-                  className="size-11"
+        <div className="grid grid-cols-2 gap-2.5 px-4 pb-3 pt-3">
+          <EndpointCard
+            label="From account"
+            name={activeAccount.name}
+            color={activeAccount.color ?? "#0ea5e9"}
+            onClick={() => setAccountPickerOpen(true)}
+            icon={
+              <span className="flex size-11 items-center justify-center rounded-xl bg-white">
+                <AccountIcon
+                  className="size-5"
+                  strokeWidth={1.75}
+                  style={{ color: activeAccount.color ?? "#0ea5e9" }}
+                  aria-hidden="true"
                 />
-              }
-            />
-            <EndpointCard
-              label="To category"
-              name={activeCategory.name}
-              color={activeCategory.color}
-              onClick={() => setCategoryPickerOpen(true)}
-              icon={
-                <CategoryIcon
-                  icon={activeCategory.icon}
-                  color={activeCategory.color}
-                  className="flex size-11 items-center justify-center rounded-2xl"
-                />
-              }
-            />
-          </div>
-
-          {subcategories.length > 0 ? (
-            <div className="flex gap-2 overflow-x-auto px-4 pb-3">
-              {subcategories.map((subcategory) => {
-                const isActive = selectedSubcategory?.id === subcategory.id;
-
-                return (
-                  <button
-                    key={subcategory.id}
-                    type="button"
-                    onClick={() => setSelectedSubcategoryId(subcategory.id)}
-                    className={cn(
-                      "flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
-                      isActive
-                        ? "border-transparent text-white"
-                        : "border-current bg-transparent text-foreground/90",
-                    )}
-                    style={
-                      isActive
-                        ? {
-                            backgroundColor: accentColor,
-                            borderColor: accentColor,
-                          }
-                        : { borderColor: accentColor, color: accentColor }
-                    }
-                  >
-                    <CategoryIcon
-                      icon={subcategory.icon}
-                      color={isActive ? accentColor : accentColor}
-                      className={cn(
-                        "flex size-5 items-center justify-center rounded-md",
-                        isActive && "bg-white",
-                      )}
-                    />
-                    <span>{subcategory.name}</span>
-                  </button>
-                );
-              })}
-            </div>
-          ) : null}
-
-          <div className="px-5 pb-3 text-center">
-            <p className="text-sm font-medium text-expense">Expense</p>
-            <p
-              className="mt-1 min-h-[2.5rem] text-[1.75rem] font-semibold tabular-nums tracking-tight"
-              style={{ color: accentColor }}
-            >
-              {displayValue}
-            </p>
-          </div>
-
-          <div className="px-4 pb-3">
-            <Input
-              value={notes}
-              onChange={(event) => setNotes(event.target.value)}
-              placeholder="Notes..."
-              className="h-11 rounded-xl border-[#3a3a3c] bg-[#2c2c2e] px-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:border-[#4a4a4c] focus-visible:ring-0"
-            />
-          </div>
-
-          <ExpenseAmountKeypad
-            pendingOperation={pendingOperation}
-            onAction={applyAction}
-            onConfirm={handleConfirm}
-            onClear={() => setExpression(clearExpression())}
-            currency={selectedCurrency}
-            onCalendarPress={() => setDatePickerOpen(true)}
-            onCurrencyPress={() => setCurrencyPickerOpen(true)}
-            confirmClassName="bg-[#7c3aed] hover:bg-[#6d28d9] active:bg-[#5b21b6] border-[#7c3aed]"
+              </span>
+            }
           />
+          <EndpointCard
+            label="To category"
+            name={activeCategory.name}
+            color={activeCategory.color}
+            onClick={() => setCategoryPickerOpen(true)}
+            icon={
+              <span
+                className="flex size-11 items-center justify-center rounded-full bg-white"
+                style={{ color: activeCategory.color }}
+              >
+                <CategoryIconGlyph
+                  icon={activeCategory.icon}
+                  className="size-5"
+                />
+              </span>
+            }
+          />
+        </div>
 
-          <button
-            type="button"
-            onClick={() => setDatePickerOpen(true)}
-            className="w-full px-4 py-3 text-center text-sm text-muted-foreground transition-colors hover:text-foreground"
+        {subcategories.length > 0 ? (
+          <div className="flex gap-2 overflow-x-auto px-4 pb-3">
+            {subcategories.map((subcategory) => {
+              const isActive = selectedSubcategory?.id === subcategory.id;
+
+              return (
+                <button
+                  key={subcategory.id}
+                  type="button"
+                  onClick={() => setSelectedSubcategoryId(subcategory.id)}
+                  className={cn(
+                    "flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                    isActive
+                      ? "border-transparent text-white"
+                      : "border-current bg-transparent text-foreground/90",
+                  )}
+                  style={
+                    isActive
+                      ? {
+                          backgroundColor: accentColor,
+                          borderColor: accentColor,
+                        }
+                      : { borderColor: accentColor, color: accentColor }
+                  }
+                >
+                  <span
+                    className={cn(
+                      "flex size-5 items-center justify-center rounded-md",
+                      isActive ? "bg-white" : "bg-transparent",
+                    )}
+                    style={{ color: accentColor }}
+                  >
+                    <CategoryIconGlyph
+                      icon={subcategory.icon}
+                      className="size-3.5"
+                    />
+                  </span>
+                  <span>{subcategory.name}</span>
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
+
+        <div className="px-5 pb-3 text-center">
+          <p
+            className="text-sm font-medium"
+            style={{ color: accentColor }}
           >
-            {formatExpenseDateLabel(selectedDate)}
-          </button>
-        </DrawerContent>
-      </Drawer>
+            Expense
+          </p>
+          <p
+            className="mt-1 min-h-[2.5rem] text-[1.75rem] font-semibold tabular-nums tracking-tight"
+            style={{ color: accentColor }}
+          >
+            {displayValue}
+          </p>
+        </div>
 
-      <ExpenseAccountPickerDrawer
-        open={accountPickerOpen}
-        onOpenChange={setAccountPickerOpen}
-        accounts={accounts}
-        selectedAccountId={activeAccount.id}
-        onSelect={(accountId) => {
-          setSelectedAccountId(accountId);
-          const nextAccount = accounts.find((item) => item.id === accountId);
-          if (nextAccount?.currency) {
-            setSelectedCurrency(nextAccount.currency);
-          }
-        }}
-      />
+        <div className="px-4 pb-3">
+          <Input
+            value={notes}
+            onChange={(event) => setNotes(event.target.value)}
+            placeholder="Notes..."
+            className="h-11 rounded-xl border-[#3a3a3c] bg-[#2c2c2e] px-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:border-[#4a4a4c] focus-visible:ring-0"
+          />
+        </div>
 
-      <ExpenseCategoryPickerDrawer
-        open={categoryPickerOpen}
-        onOpenChange={setCategoryPickerOpen}
-        categories={categories}
-        selectedCategoryId={activeCategory.id}
-        onSelect={(categoryId) => {
-          setSelectedCategoryId(categoryId);
-          const nextCategory = categories.find((item) => item.id === categoryId);
-          if (nextCategory) {
-            setSelectedSubcategoryId(
-              getCategorySubcategories(
-                nextCategory.id,
-                nextCategory.name,
-                nextCategory.icon,
-              )[0]?.id ?? null,
+        <ExpenseAmountKeypad
+          pendingOperation={pendingOperation}
+          onAction={applyAction}
+          onConfirm={handleConfirm}
+          onClear={() => setExpression(clearExpression())}
+          currency={selectedCurrency}
+          onCalendarPress={() => setDatePickerOpen(true)}
+          onCurrencyPress={() => setCurrencyPickerOpen(true)}
+        />
+
+        <button
+          type="button"
+          onClick={() => setDatePickerOpen(true)}
+          className="w-full px-4 py-3 text-center text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          {formatExpenseDateLabel(selectedDate)}
+        </button>
+
+        <ExpenseAccountPickerDrawer
+          open={accountPickerOpen}
+          onOpenChange={setAccountPickerOpen}
+          accounts={accounts}
+          selectedAccountId={activeAccount.id}
+          onSelect={(accountId) => {
+            setSelectedAccountId(accountId);
+            const nextAccount = accounts.find((item) => item.id === accountId);
+            if (nextAccount?.currency) {
+              setSelectedCurrency(nextAccount.currency);
+            }
+          }}
+        />
+
+        <ExpenseCategoryPickerDrawer
+          open={categoryPickerOpen}
+          onOpenChange={setCategoryPickerOpen}
+          categories={categories}
+          selectedCategoryId={activeCategory.id}
+          onSelect={(categoryId) => {
+            setSelectedCategoryId(categoryId);
+            const nextCategory = categories.find(
+              (item) => item.id === categoryId,
             );
-          }
-        }}
-      />
+            if (nextCategory) {
+              setSelectedSubcategoryId(
+                getCategorySubcategories(
+                  nextCategory.id,
+                  nextCategory.name,
+                  nextCategory.icon,
+                )[0]?.id ?? null,
+              );
+            }
+          }}
+        />
 
-      <ExpenseDatePickerDrawer
-        open={datePickerOpen}
-        onOpenChange={setDatePickerOpen}
-        selectedDate={selectedDate}
-        onSelect={setSelectedDate}
-      />
+        <ExpenseDatePickerDrawer
+          open={datePickerOpen}
+          onOpenChange={setDatePickerOpen}
+          selectedDate={selectedDate}
+          onSelect={setSelectedDate}
+        />
 
-      <ExpenseCurrencyPickerDrawer
-        open={currencyPickerOpen}
-        onOpenChange={setCurrencyPickerOpen}
-        selectedCurrency={selectedCurrency}
-        onSelect={setSelectedCurrency}
-      />
-    </>
+        <ExpenseCurrencyPickerDrawer
+          open={currencyPickerOpen}
+          onOpenChange={setCurrencyPickerOpen}
+          selectedCurrency={selectedCurrency}
+          onSelect={setSelectedCurrency}
+        />
+      </DrawerContent>
+    </Drawer>
   );
 }
 
@@ -415,16 +455,14 @@ function EndpointCard({
     <button
       type="button"
       onClick={onClick}
-      className="relative rounded-2xl px-3 pb-3 pt-8 text-center text-white transition-opacity hover:opacity-95 active:opacity-90"
+      className="relative rounded-2xl px-3 pb-3.5 pt-9 text-center text-white transition-opacity hover:opacity-95 active:opacity-90"
       style={{ backgroundColor: color }}
     >
-      <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-[#1c1c1e] p-1">
+      <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2">
         {icon}
       </div>
-      <p className="text-[10px] font-medium uppercase tracking-wide text-white/80">
-        {label}
-      </p>
-      <p className="mt-0.5 line-clamp-2 text-sm font-semibold leading-tight">
+      <p className="text-[11px] font-medium text-white/85">{label}</p>
+      <p className="mt-0.5 line-clamp-2 text-base font-semibold leading-tight">
         {name}
       </p>
     </button>

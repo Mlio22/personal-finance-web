@@ -19,8 +19,7 @@ import { CategoryBudgetIcon } from "@/features/categories/components/category-bu
 import type { CategorySummaryItem } from "@/features/categories/types";
 import type { Account } from "@/features/accounts/types";
 import {
-  Drawer,
-  DrawerClose,
+  NestedDrawer,
   DrawerContent,
   DrawerTitle,
 } from "@/components/ui/drawer";
@@ -28,7 +27,10 @@ import { formatMoney } from "@/lib/format-currency";
 import { cn } from "@/lib/utils";
 
 const EXPENSE_DRAWER_CLASS =
-  "mx-auto max-h-[92dvh] max-w-lg gap-0 overflow-y-auto rounded-t-[1.75rem] border-0 bg-[#1c1c1e] px-0 pb-[env(safe-area-inset-bottom)] [&>div:first-child]:mt-2.5 [&>div:first-child]:h-1 [&>div:first-child]:w-10 [&>div:first-child]:bg-[#3a3a3c]";
+  "mx-auto max-h-[85dvh] max-w-lg gap-0 overflow-y-auto rounded-t-[1.75rem] border-0 bg-[#2c2c2e] px-0 pb-[env(safe-area-inset-bottom)] [&>div:first-child]:mt-2.5 [&>div:first-child]:h-1 [&>div:first-child]:w-10 [&>div:first-child]:bg-[#3a3a3c]";
+
+const PICKER_CARD_CLASS =
+  "rounded-2xl border border-[#3a3a3c] bg-[#3a3a3c] px-3 py-3 text-left transition-colors";
 
 const CURRENCY_OPTIONS = {
   my: [
@@ -69,6 +71,14 @@ function shiftDays(date: Date, days: number): Date {
   return startOfDay(next);
 }
 
+function isSameDay(a: Date, b: Date): boolean {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
+
 interface ExpenseAccountPickerDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -91,8 +101,13 @@ export function ExpenseAccountPickerDrawer({
     return null;
   }
 
+  function handleSelect(accountId: string) {
+    onSelect(accountId);
+    onOpenChange(false);
+  }
+
   return (
-    <Drawer open={open} onOpenChange={onOpenChange} nested>
+    <NestedDrawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent className={EXPENSE_DRAWER_CLASS}>
         <DrawerTitle className="sr-only">From account</DrawerTitle>
 
@@ -101,7 +116,7 @@ export function ExpenseAccountPickerDrawer({
             className="relative rounded-2xl px-4 pb-4 pt-10 text-white"
             style={{ backgroundColor: selectedAccount.color ?? "#14b8a6" }}
           >
-            <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-[#1c1c1e] p-1">
+            <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-[#2c2c2e] p-1">
               <AccountAvatar
                 name={selectedAccount.name}
                 color={selectedAccount.color}
@@ -115,8 +130,12 @@ export function ExpenseAccountPickerDrawer({
                 aria-hidden="true"
               />
             ) : null}
-            <p className="text-center text-lg font-semibold">{selectedAccount.name}</p>
-            <p className="mt-1 text-center text-xs text-white/75">Account balance</p>
+            <p className="text-center text-lg font-semibold">
+              {selectedAccount.name}
+            </p>
+            <p className="mt-1 text-center text-xs text-white/75">
+              Account balance
+            </p>
             <p className="text-center text-sm font-semibold tabular-nums">
               {formatMoney(selectedAccount.balance, selectedAccount.currency)}
             </p>
@@ -128,37 +147,36 @@ export function ExpenseAccountPickerDrawer({
             const isSelected = account.id === selectedAccountId;
 
             return (
-              <DrawerClose key={account.id} asChild>
-                <button
-                  type="button"
-                  onClick={() => onSelect(account.id)}
-                  className={cn(
-                    "flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition-colors hover:bg-[#2c2c2e]",
-                    isSelected && "bg-[#2c2c2e]",
-                  )}
+              <button
+                key={account.id}
+                type="button"
+                onClick={() => handleSelect(account.id)}
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition-colors hover:bg-[#3a3a3c]",
+                  isSelected && "bg-[#3a3a3c]",
+                )}
+              >
+                <AccountAvatar
+                  name={account.name}
+                  color={account.color}
+                  icon={account.icon}
+                  className="size-9"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">{account.name}</p>
+                </div>
+                <p
+                  className="shrink-0 text-sm font-semibold tabular-nums"
+                  style={{ color: account.color ?? "#14b8a6" }}
                 >
-                  <AccountAvatar
-                    name={account.name}
-                    color={account.color}
-                    icon={account.icon}
-                    className="size-9"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{account.name}</p>
-                  </div>
-                  <p
-                    className="shrink-0 text-sm font-semibold tabular-nums"
-                    style={{ color: account.color ?? "#14b8a6" }}
-                  >
-                    {formatMoney(account.balance, account.currency)}
-                  </p>
-                </button>
-              </DrawerClose>
+                  {formatMoney(account.balance, account.currency)}
+                </p>
+              </button>
             );
           })}
         </div>
       </DrawerContent>
-    </Drawer>
+    </NestedDrawer>
   );
 }
 
@@ -177,8 +195,13 @@ export function ExpenseCategoryPickerDrawer({
   selectedCategoryId,
   onSelect,
 }: ExpenseCategoryPickerDrawerProps) {
+  function handleSelect(categoryId: string) {
+    onSelect(categoryId);
+    onOpenChange(false);
+  }
+
   return (
-    <Drawer open={open} onOpenChange={onOpenChange} nested>
+    <NestedDrawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent className={EXPENSE_DRAWER_CLASS}>
         <DrawerTitle className="sr-only">Expense category</DrawerTitle>
 
@@ -195,40 +218,39 @@ export function ExpenseCategoryPickerDrawer({
               const isSelected = category.id === selectedCategoryId;
 
               return (
-                <DrawerClose key={category.id} asChild>
-                  <button
-                    type="button"
-                    onClick={() => onSelect(category.id)}
-                    className={cn(
-                      "flex min-w-0 flex-col items-center gap-1 rounded-xl px-1 py-1 transition-colors",
-                      isSelected && "bg-[#2c2c2e] ring-1 ring-[#7c3aed]/70",
-                    )}
+                <button
+                  key={category.id}
+                  type="button"
+                  onClick={() => handleSelect(category.id)}
+                  className={cn(
+                    "flex min-w-0 flex-col items-center gap-1 rounded-xl px-1 py-1 transition-colors",
+                    isSelected && "bg-[#3a3a3c] ring-1 ring-[#7c3aed]/70",
+                  )}
+                >
+                  <span className="line-clamp-1 text-[10px] font-semibold">
+                    {category.name}
+                  </span>
+                  <CategoryBudgetIcon
+                    icon={category.icon}
+                    color={category.color}
+                    budgetedAmount={category.budgetedAmount}
+                    spentAmount={category.spentAmount}
+                  />
+                  <span
+                    className="text-[9px] font-semibold tabular-nums"
+                    style={{ color: category.color }}
                   >
-                    <span className="line-clamp-1 text-[10px] font-semibold">
-                      {category.name}
-                    </span>
-                    <CategoryBudgetIcon
-                      icon={category.icon}
-                      color={category.color}
-                      budgetedAmount={category.budgetedAmount}
-                      spentAmount={category.spentAmount}
-                    />
-                    <span
-                      className="text-[9px] font-semibold tabular-nums"
-                      style={{ color: category.color }}
-                    >
-                      {formatMoney(category.spentAmount, "IDR", {
-                        maximumFractionDigits: 0,
-                      })}
-                    </span>
-                  </button>
-                </DrawerClose>
+                    {formatMoney(category.spentAmount, "IDR", {
+                      maximumFractionDigits: 0,
+                    })}
+                  </span>
+                </button>
               );
             })}
           </div>
         </div>
       </DrawerContent>
-    </Drawer>
+    </NestedDrawer>
   );
 }
 
@@ -248,6 +270,8 @@ export function ExpenseDatePickerDrawer({
   const dateInputRef = useRef<HTMLInputElement>(null);
   const today = startOfDay(new Date());
   const yesterday = shiftDays(today, -1);
+  const isTodaySelected = isSameDay(selectedDate, today);
+  const isYesterdaySelected = isSameDay(selectedDate, yesterday);
 
   function handleSelect(date: Date) {
     onSelect(date);
@@ -255,19 +279,30 @@ export function ExpenseDatePickerDrawer({
   }
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange} nested>
+    <NestedDrawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent className={EXPENSE_DRAWER_CLASS}>
-        <DrawerTitle className="px-4 pt-2 text-base font-semibold text-foreground">
+        <DrawerTitle className="px-4 pt-1 text-center text-base font-semibold text-foreground">
           Date
         </DrawerTitle>
 
-        <div className="space-y-2 px-4 pb-4 pt-2">
+        <div className="space-y-2 px-4 pb-5 pt-3">
           <button
             type="button"
-            onClick={() => dateInputRef.current?.showPicker?.()}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#3a3a3c] bg-[#2c2c2e] px-4 py-3 text-sm font-medium"
+            onClick={() => {
+              const input = dateInputRef.current;
+              if (!input) return;
+              if (typeof input.showPicker === "function") {
+                input.showPicker();
+              } else {
+                input.click();
+              }
+            }}
+            className={cn(
+              PICKER_CARD_CLASS,
+              "flex w-full items-center justify-center gap-2 py-4 text-sm font-medium",
+            )}
           >
-            <Calendar className="size-4" aria-hidden="true" />
+            <Calendar className="size-5" aria-hidden="true" />
             <span>Select day</span>
           </button>
           <input
@@ -288,26 +323,32 @@ export function ExpenseDatePickerDrawer({
             <button
               type="button"
               onClick={() => handleSelect(yesterday)}
-              className="rounded-2xl border border-[#3a3a3c] bg-[#2c2c2e] px-3 py-3 text-left"
+              className={cn(
+                PICKER_CARD_CLASS,
+                isYesterdaySelected && "bg-[#4a4a4c] ring-1 ring-white/20",
+              )}
             >
               <div className="flex items-center gap-2 text-sm font-medium">
-                <Moon className="size-4" aria-hidden="true" />
+                <Moon className="size-4 shrink-0" aria-hidden="true" />
                 Yesterday
               </div>
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="mt-1 pl-6 text-xs text-muted-foreground">
                 {formatPickerDate(yesterday)}
               </p>
             </button>
             <button
               type="button"
               onClick={() => handleSelect(today)}
-              className="rounded-2xl border border-[#3a3a3c] bg-[#2c2c2e] px-3 py-3 text-left"
+              className={cn(
+                PICKER_CARD_CLASS,
+                isTodaySelected && "bg-[#4a4a4c] ring-1 ring-white/20",
+              )}
             >
               <div className="flex items-center gap-2 text-sm font-medium">
-                <Sun className="size-4" aria-hidden="true" />
+                <Sun className="size-4 shrink-0" aria-hidden="true" />
                 Today
               </div>
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="mt-1 pl-6 text-xs text-muted-foreground">
                 {formatPickerDate(today)}
               </p>
             </button>
@@ -317,29 +358,29 @@ export function ExpenseDatePickerDrawer({
             <button
               type="button"
               disabled
-              className="rounded-2xl border border-[#3a3a3c] bg-[#2c2c2e] px-3 py-3 text-left opacity-60"
+              className={cn(PICKER_CARD_CLASS, "opacity-60")}
             >
               <div className="flex items-center gap-2 text-sm font-medium">
-                <Repeat className="size-4" aria-hidden="true" />
+                <Repeat className="size-4 shrink-0" aria-hidden="true" />
                 Recurrence
               </div>
-              <p className="mt-1 text-xs text-muted-foreground">None</p>
+              <p className="mt-1 pl-6 text-xs text-muted-foreground">None</p>
             </button>
             <button
               type="button"
               disabled
-              className="rounded-2xl border border-[#3a3a3c] bg-[#2c2c2e] px-3 py-3 text-left opacity-60"
+              className={cn(PICKER_CARD_CLASS, "opacity-60")}
             >
               <div className="flex items-center gap-2 text-sm font-medium">
-                <Bell className="size-4" aria-hidden="true" />
+                <Bell className="size-4 shrink-0" aria-hidden="true" />
                 Reminder
               </div>
-              <p className="mt-1 text-xs text-muted-foreground">None</p>
+              <p className="mt-1 pl-6 text-xs text-muted-foreground">None</p>
             </button>
           </div>
         </div>
       </DrawerContent>
-    </Drawer>
+    </NestedDrawer>
   );
 }
 
@@ -381,23 +422,29 @@ export function ExpenseCurrencyPickerDrawer({
   const [activeTab, setActiveTab] = useState<CurrencyTab>("my");
   const options = CURRENCY_OPTIONS[activeTab];
 
+  function handleSelect(currency: string) {
+    onSelect(currency);
+    onOpenChange(false);
+  }
+
   return (
-    <Drawer open={open} onOpenChange={onOpenChange} nested>
+    <NestedDrawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent className={EXPENSE_DRAWER_CLASS}>
-        <div className="flex items-center gap-3 px-4 pt-2">
-          <DrawerClose asChild>
-            <button
-              type="button"
-              aria-label="Back"
-              className="rounded-full p-1 text-foreground hover:bg-[#2c2c2e]"
-            >
-              <ArrowLeft className="size-5" aria-hidden="true" />
-            </button>
-          </DrawerClose>
-          <DrawerTitle className="text-base font-semibold">Currency</DrawerTitle>
+        <div className="relative flex items-center justify-center px-4 pt-1">
+          <button
+            type="button"
+            aria-label="Back"
+            onClick={() => onOpenChange(false)}
+            className="absolute left-3 rounded-full p-1.5 text-foreground hover:bg-[#3a3a3c]"
+          >
+            <ArrowLeft className="size-5" aria-hidden="true" />
+          </button>
+          <DrawerTitle className="text-center text-base font-semibold">
+            Currency
+          </DrawerTitle>
         </div>
 
-        <div className="mt-2 flex border-b border-[#3a3a3c] px-2">
+        <div className="mt-3 flex border-b border-[#3a3a3c] px-1">
           {CURRENCY_TABS.map((tab) => {
             const isActive = tab.id === activeTab;
 
@@ -407,58 +454,73 @@ export function ExpenseCurrencyPickerDrawer({
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "flex min-w-0 flex-1 flex-col items-center gap-1 px-1 py-2 text-[10px] font-medium",
+                  "relative flex min-w-0 flex-1 flex-col items-center gap-1.5 px-1 pb-2.5 pt-1 text-[10px] font-medium",
                   isActive ? "text-[#c4b5fd]" : "text-muted-foreground",
                 )}
               >
-                {tab.icon}
+                <span
+                  className={cn(
+                    "flex size-8 items-center justify-center rounded-full border",
+                    isActive
+                      ? "border-[#7c3aed]/70 text-[#c4b5fd]"
+                      : "border-[#4a4a4c]",
+                  )}
+                >
+                  {tab.icon}
+                </span>
                 <span className="line-clamp-1">{tab.label}</span>
                 {isActive ? (
-                  <span className="h-0.5 w-full rounded-full bg-[#7c3aed]" />
-                ) : (
-                  <span className="h-0.5 w-full" />
-                )}
+                  <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-[#7c3aed]" />
+                ) : null}
               </button>
             );
           })}
         </div>
 
-        <div className="space-y-1 px-2 py-3">
+        <div className="space-y-0.5 px-2 py-2">
           {options.map((option) => {
             const isSelected = option.code === selectedCurrency;
 
             return (
-              <DrawerClose key={option.code} asChild>
-                <button
-                  type="button"
-                  onClick={() => onSelect(option.code)}
+              <button
+                key={option.code}
+                type="button"
+                onClick={() => handleSelect(option.code)}
+                className="flex w-full items-center gap-3 rounded-2xl px-3 py-3.5 text-left transition-colors hover:bg-[#3a3a3c]"
+              >
+                <span
                   className={cn(
-                    "flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition-colors hover:bg-[#2c2c2e]",
-                    isSelected && "text-[#c4b5fd]",
+                    "flex size-5 shrink-0 items-center justify-center rounded-full border-2",
+                    isSelected
+                      ? "border-[#7c3aed] bg-[#7c3aed]"
+                      : "border-[#6b7280]",
                   )}
                 >
-                  <span
-                    className={cn(
-                      "flex size-5 items-center justify-center rounded-full border-2",
-                      isSelected
-                        ? "border-[#7c3aed] bg-[#7c3aed]"
-                        : "border-[#6b7280]",
-                    )}
-                  >
-                    {isSelected ? (
-                      <span className="size-2 rounded-full bg-white" />
-                    ) : null}
-                  </span>
-                  <span className="min-w-0 flex-1 text-sm font-medium">
-                    {option.label}
-                  </span>
-                  <span className="text-sm text-muted-foreground">{option.code}</span>
-                </button>
-              </DrawerClose>
+                  {isSelected ? (
+                    <span className="size-2 rounded-full bg-white" />
+                  ) : null}
+                </span>
+                <span
+                  className={cn(
+                    "min-w-0 flex-1 text-sm font-medium",
+                    isSelected ? "text-[#c4b5fd]" : "text-foreground",
+                  )}
+                >
+                  {option.label}
+                </span>
+                <span
+                  className={cn(
+                    "text-sm",
+                    isSelected ? "text-[#c4b5fd]" : "text-muted-foreground",
+                  )}
+                >
+                  {option.code}
+                </span>
+              </button>
             );
           })}
         </div>
       </DrawerContent>
-    </Drawer>
+    </NestedDrawer>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, type ReactNode } from "react";
+import { useRef } from "react";
 import { Check, Delete } from "lucide-react";
 import type { AmountOperator } from "@/components/amount-input/amount-expression";
 import { cn } from "@/lib/utils";
@@ -19,7 +19,6 @@ export interface AmountKeypadProps {
   onConfirm: () => void;
   onClear: () => void;
   confirmClassName?: string;
-  leadingActions?: ReactNode;
 }
 
 export function AmountKeypad({
@@ -28,24 +27,17 @@ export function AmountKeypad({
   onConfirm,
   onClear,
   confirmClassName,
-  leadingActions,
 }: AmountKeypadProps) {
-  const [topLeading, secondLeading] = Array.isArray(leadingActions)
-    ? leadingActions
-    : [leadingActions, null];
-
   return (
     <div
       className="grid grid-cols-5 grid-rows-[repeat(4,minmax(3.75rem,1fr))] gap-2 border-t border-[#2a2a2a] bg-[#121212] p-2"
       role="group"
       aria-label="Amount keypad"
     >
-      {topLeading ?? (
-        <KeypadButton
-          action={{ kind: "operator", value: "÷", label: "÷" }}
-          onPress={onAction}
-        />
-      )}
+      <KeypadButton
+        action={{ kind: "operator", value: "÷", label: "÷" }}
+        onPress={onAction}
+      />
       <KeypadButton
         action={{ kind: "digit", value: "7", label: "7" }}
         onPress={onAction}
@@ -58,14 +50,15 @@ export function AmountKeypad({
         action={{ kind: "digit", value: "9", label: "9" }}
         onPress={onAction}
       />
-      <BackspaceButton onBackspace={() => onAction({ kind: "backspace", label: "Backspace" })} onClear={onClear} />
+      <BackspaceButton
+        onBackspace={() => onAction({ kind: "backspace", label: "Backspace" })}
+        onClear={onClear}
+      />
 
-      {secondLeading ?? (
-        <KeypadButton
-          action={{ kind: "operator", value: "×", label: "×" }}
-          onPress={onAction}
-        />
-      )}
+      <KeypadButton
+        action={{ kind: "operator", value: "×", label: "×" }}
+        onPress={onAction}
+      />
       <KeypadButton
         action={{ kind: "digit", value: "4", label: "4" }}
         onPress={onAction}
