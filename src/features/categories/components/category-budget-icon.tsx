@@ -35,7 +35,7 @@ export function CategoryBudgetIcon({
   return (
     <span
       className={cn(
-        "relative flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-full border-[2.5px]",
+        "relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-full border-2",
         className,
       )}
       style={{
@@ -56,7 +56,7 @@ export function CategoryBudgetIcon({
 
       <CategoryIconGlyph
         icon={icon}
-        className={cn("relative z-10 size-6 text-white", glyphClassName)}
+        className={cn("relative z-10 size-5 text-white", glyphClassName)}
       />
     </span>
   );

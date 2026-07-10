@@ -83,8 +83,8 @@ export function CategoryCard({
         color={category.color}
         budgetedAmount={category.budgetedAmount}
         spentAmount={category.spentAmount}
-        className={isEdge ? "size-14" : "size-16"}
-        glyphClassName={isEdge ? "size-6" : "size-7"}
+        className={isEdge ? "size-12" : "size-14"}
+        glyphClassName={isEdge ? "size-5" : "size-6"}
       />
 
       <span
