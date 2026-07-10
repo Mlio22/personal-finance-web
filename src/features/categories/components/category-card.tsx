@@ -23,26 +23,6 @@ interface CategoryCardProps {
   style?: CSSProperties;
 }
 
-function formatCompactIdr(amount: number): string {
-  if (amount >= 1_000_000) {
-    const millions = amount / 1_000_000;
-    const label = Number.isInteger(millions)
-      ? String(millions)
-      : millions.toFixed(1).replace(/\.0$/, "");
-    return `IDR ${label}M`;
-  }
-
-  if (amount >= 10_000) {
-    const thousands = amount / 1_000;
-    const label = Number.isInteger(thousands)
-      ? String(thousands)
-      : thousands.toFixed(1).replace(/\.0$/, "");
-    return `IDR ${label}K`;
-  }
-
-  return formatIdr(amount);
-}
-
 export function CategoryCard({
   category,
   density = "flank",
@@ -95,7 +75,7 @@ export function CategoryCard({
           isEdge ? "text-[9px]" : "text-[10px]",
         )}
       >
-        {formatCompactIdr(category.spentAmount)}
+        {formatIdr(category.spentAmount)}
       </span>
 
       <CategoryBudgetIcon
@@ -122,8 +102,8 @@ export function CategoryCard({
         }
       >
         {hasBudget
-          ? formatCompactIdr(category.budgetedAmount)
-          : formatCompactIdr(category.spentAmount)}
+          ? formatIdr(category.budgetedAmount)
+          : formatIdr(category.spentAmount)}
       </span>
     </button>
   );
