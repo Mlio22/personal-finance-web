@@ -6,6 +6,10 @@ import {
   getCategoryRemainingDisplay,
   hasCategoryBudget,
 } from "@/features/categories/lib/category-display";
+import {
+  CATEGORY_EDGE_SLOT_CLASS,
+  CATEGORY_FLANK_SLOT_CLASS,
+} from "@/features/categories/lib/category-grid-layout";
 import type { CategorySummaryItem } from "@/features/categories/types";
 import { useLongPress } from "@/hooks/use-long-press";
 import { formatIdr } from "@/lib/format-currency";
@@ -52,8 +56,11 @@ export function CategoryCard({
       className={cn(
         "flex min-w-0 flex-col items-center rounded-xl text-center transition-colors hover:bg-muted/40 select-none",
         isEdge
-          ? "gap-0.5 px-0.5 py-1"
-          : "h-full justify-center gap-0.5 px-0.5 py-1",
+          ? cn("gap-0.5 px-0.5 py-1", CATEGORY_EDGE_SLOT_CLASS)
+          : cn(
+              "h-full justify-center gap-0.5 px-0.5 py-1",
+              CATEGORY_FLANK_SLOT_CLASS,
+            ),
         highlighted && "bg-muted/60 ring-1 ring-border/70",
         className,
       )}
@@ -63,7 +70,7 @@ export function CategoryCard({
       <span
         className={cn(
           "line-clamp-1 w-full font-semibold leading-tight text-foreground",
-          isEdge ? "text-[10px]" : "text-[11px]",
+          isEdge ? "text-[11px]" : "text-xs",
         )}
       >
         {category.name}
@@ -72,7 +79,7 @@ export function CategoryCard({
       <span
         className={cn(
           "max-w-full truncate font-medium tabular-nums leading-none text-muted-foreground",
-          isEdge ? "text-[9px]" : "text-[10px]",
+          isEdge ? "text-[11px]" : "text-xs",
         )}
       >
         {formatIdr(category.spentAmount)}
@@ -90,7 +97,7 @@ export function CategoryCard({
       <span
         className={cn(
           "max-w-full truncate font-semibold tabular-nums leading-none",
-          isEdge ? "text-[9px]" : "text-[10px]",
+          isEdge ? "text-[11px]" : "text-xs",
           hasBudget || category.spentAmount > 0 || isOverBudget
             ? undefined
             : "text-muted-foreground",

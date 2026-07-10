@@ -18,7 +18,11 @@ import { useCategoriesSummary } from "@/features/categories/hooks/use-categories
 import { useCreateExpense } from "@/features/categories/hooks/use-create-expense";
 import { useCreateIncome } from "@/features/categories/hooks/use-create-income";
 import { useOverview } from "@/features/categories/hooks/use-overview";
-import { partitionCategoryGrid } from "@/features/categories/lib/category-grid-layout";
+import {
+  CATEGORY_DONUT_CELL_CLASS,
+  CATEGORY_GRID_CLASS,
+  partitionCategoryGrid,
+} from "@/features/categories/lib/category-grid-layout";
 import { resolveExpenseAccount } from "@/features/categories/lib/resolve-expense-account";
 import type {
   CategoryKind,
@@ -33,22 +37,22 @@ function getBottomCardPlacement(index: number) {
 
 function CategoriesSkeleton() {
   return (
-    <div className="grid min-h-0 flex-1 grid-cols-4 grid-rows-[auto_1fr_1fr_auto] gap-1">
+    <div className={CATEGORY_GRID_CLASS}>
       {Array.from({ length: 4 }).map((_, index) => (
         <div
           key={`top-${index}`}
-          className="h-24 animate-pulse rounded-xl bg-muted/60"
+          className="min-h-[7rem] animate-pulse rounded-xl bg-muted/60"
         />
       ))}
-      <div className="col-start-1 row-start-2 h-28 animate-pulse rounded-xl bg-muted/60" />
+      <div className="col-start-1 row-start-2 min-h-[7rem] animate-pulse rounded-xl bg-muted/60" />
       <div className="col-span-2 row-span-2 col-start-2 row-start-2 aspect-square w-full animate-pulse rounded-full bg-muted/60" />
-      <div className="col-start-4 row-start-2 h-28 animate-pulse rounded-xl bg-muted/60" />
-      <div className="col-start-1 row-start-3 h-28 animate-pulse rounded-xl bg-muted/60" />
-      <div className="col-start-4 row-start-3 h-28 animate-pulse rounded-xl bg-muted/60" />
+      <div className="col-start-4 row-start-2 min-h-[7rem] animate-pulse rounded-xl bg-muted/60" />
+      <div className="col-start-1 row-start-3 min-h-[7rem] animate-pulse rounded-xl bg-muted/60" />
+      <div className="col-start-4 row-start-3 min-h-[7rem] animate-pulse rounded-xl bg-muted/60" />
       {Array.from({ length: 4 }).map((_, index) => (
         <div
           key={`bottom-${index}`}
-          className="row-start-4 h-24 animate-pulse rounded-xl bg-muted/60"
+          className="row-start-4 min-h-[7rem] animate-pulse rounded-xl bg-muted/60"
           style={{ gridColumnStart: index + 1 }}
         />
       ))}
@@ -216,7 +220,7 @@ export function CategoriesScreen({
   return (
     <>
       <div className="flex min-h-0 flex-1 flex-col gap-2 pb-1">
-        <div className="grid min-h-0 flex-1 grid-cols-4 grid-rows-[auto_1fr_1fr_auto] gap-1">
+        <div className={CATEGORY_GRID_CLASS}>
           {top.map((category, index) =>
             category ? (
               <CategoryCard
@@ -255,16 +259,18 @@ export function CategoriesScreen({
             />
           )}
 
-          <div className="col-span-2 row-span-2 col-start-2 row-start-2 flex min-h-0 min-w-0 items-center justify-center">
-            <ExpenseDonutChart
-              categories={categories}
-              totalExpenses={overviewData?.expenses ?? 0}
-              totalIncome={overviewData?.income ?? 0}
-              viewKind={viewKind}
-              selectedCategoryId={selectedCategoryId}
-              onToggleKind={handleToggleKind}
-              className="aspect-square h-full w-full max-h-full max-w-full"
-            />
+          <div className={CATEGORY_DONUT_CELL_CLASS}>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <ExpenseDonutChart
+                categories={categories}
+                totalExpenses={overviewData?.expenses ?? 0}
+                totalIncome={overviewData?.income ?? 0}
+                viewKind={viewKind}
+                selectedCategoryId={selectedCategoryId}
+                onToggleKind={handleToggleKind}
+                className="aspect-square size-full max-h-full max-w-full"
+              />
+            </div>
           </div>
 
           {middleRight[0] ? (

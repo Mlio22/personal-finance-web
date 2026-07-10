@@ -10,7 +10,11 @@ import { CategoryGridPlaceholder } from "@/features/categories/components/catego
 import { ExpenseDonutChart } from "@/features/categories/components/expense-donut-chart";
 import { useCategoriesSummary } from "@/features/categories/hooks/use-categories-summary";
 import { useOverview } from "@/features/categories/hooks/use-overview";
-import { partitionCategoryGrid } from "@/features/categories/lib/category-grid-layout";
+import {
+  CATEGORY_DONUT_CELL_CLASS,
+  CATEGORY_GRID_CLASS,
+  partitionCategoryGrid,
+} from "@/features/categories/lib/category-grid-layout";
 import type {
   CategoryKind,
 } from "@/features/categories/types";
@@ -94,7 +98,7 @@ export function CategoriesEditScreen({
       />
 
       <div className="mt-3 flex min-h-0 flex-1 flex-col gap-2 pb-1">
-        <div className="grid min-h-0 flex-1 grid-cols-4 grid-rows-[auto_1fr_1fr_auto] gap-1">
+        <div className={CATEGORY_GRID_CLASS}>
           {top.map((category, index) =>
             category ? (
               <CategoryCard
@@ -131,20 +135,22 @@ export function CategoriesEditScreen({
             />
           )}
 
-          <div className="col-span-2 row-span-2 col-start-2 row-start-2 flex min-h-0 min-w-0 items-center justify-center">
-            <ExpenseDonutChart
-              categories={categories}
-              totalExpenses={overviewData?.expenses ?? 0}
-              totalIncome={overviewData?.income ?? 0}
-              viewKind={activeKind}
-              selectedCategoryId={selectedCategoryId}
-              onToggleKind={() =>
-                setActiveKind((current) =>
-                  current === "expense" ? "income" : "expense",
-                )
-              }
-              className="aspect-square h-full w-full max-h-full max-w-full"
-            />
+          <div className={CATEGORY_DONUT_CELL_CLASS}>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <ExpenseDonutChart
+                categories={categories}
+                totalExpenses={overviewData?.expenses ?? 0}
+                totalIncome={overviewData?.income ?? 0}
+                viewKind={activeKind}
+                selectedCategoryId={selectedCategoryId}
+                onToggleKind={() =>
+                  setActiveKind((current) =>
+                    current === "expense" ? "income" : "expense",
+                  )
+                }
+                className="aspect-square size-full max-h-full max-w-full"
+              />
+            </div>
           </div>
 
           {middleRight[0] ? (
